@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { matchDFIs, recommendBlendedStructure } from '@/lib/engines/dfi-matcher';
 import { detectGreenwashing } from '@/lib/engines/greenwash-detector';
+import { generateKPIRecommendationsAI } from '@/lib/engines/kpi-generator';
 import { getCountryProfile } from '@/lib/data/countries';
 import type { ProjectInput, AfricanCountry, Sector } from '@/lib/types';
 
@@ -32,7 +33,20 @@ export async function POST(request: NextRequest) {
       transitionStrategy: body.transitionStrategy || '',
       hasPublishedPlan: body.hasPublishedPlan || false,
       thirdPartyVerification: body.thirdPartyVerification || false,
+      rawDocumentText: body.rawDocumentText || '', // For greenwashing detection
     };
+
+    // Check for non-African country (immediate ineligibility)
+    const africanCountries = ['kenya', 'nigeria', 'south_africa', 'tanzania', 'ghana', 'egypt', 'morocco', 'ethiopia', 'senegal', 'drc', 'uganda', 'rwanda'];
+    const isAfricanCountry = africanCountries.includes(project.country.toLowerCase());
+
+    // Check for excluded sectors (fossil fuels)
+    const description = (project.description + ' ' + project.transitionStrategy + ' ' + (project.projectType || '')).toLowerCase();
+    const isFossilFuel = description.includes('oil drilling') || description.includes('oil exploration') ||
+      description.includes('oil production') || description.includes('offshore drilling') ||
+      description.includes('petroleum') || description.includes('coal power') ||
+      description.includes('coal plant') || description.includes('coal mining') ||
+      description.includes('barrels per day') || description.includes('fossil fuel expansion');
 
     // Run assessments
     const dfiMatches = matchDFIs(project);
@@ -43,14 +57,48 @@ export async function POST(request: NextRequest) {
     // Calculate LMA score (simplified)
     const lmaScore = calculateLMAScore(project);
 
-    // Determine eligibility
+    // Generate KPI and SPT recommendations using AI (with fallback)
+    const kpiRecommendations = await generateKPIRecommendationsAI(project);
+
+    // Apply greenwashing penalty to overall score
+    // Greenwashing risk should REDUCE the score, not be a separate metric
+    let adjustedScore = lmaScore.overall;
+    let greenwashingPenalty = 0;
+
+    if (greenwashingRisk.overallRisk === 'high') {
+      // High risk: heavy penalty (30-50 points based on risk score)
+      greenwashingPenalty = Math.round(30 + (greenwashingRisk.riskScore / 100) * 20);
+    } else if (greenwashingRisk.overallRisk === 'medium') {
+      // Medium risk: moderate penalty (10-25 points)
+      greenwashingPenalty = Math.round(10 + (greenwashingRisk.riskScore / 100) * 15);
+    }
+    // Low risk: no penalty
+
+    adjustedScore = Math.max(0, Math.min(100, lmaScore.overall - greenwashingPenalty));
+
+    // Determine eligibility with stricter rules
     let eligibilityStatus: 'eligible' | 'partial' | 'ineligible';
-    if (lmaScore.overall >= 70 && greenwashingRisk.overallRisk !== 'high') {
+    let ineligibilityReasons: string[] = [];
+
+    // Immediate disqualification conditions
+    if (!isAfricanCountry) {
+      eligibilityStatus = 'ineligible';
+      adjustedScore = 0;
+      ineligibilityReasons.push('Project location is not in Africa - TransitionPath Africa only supports African projects');
+    } else if (isFossilFuel) {
+      eligibilityStatus = 'ineligible';
+      adjustedScore = 0;
+      ineligibilityReasons.push('Fossil fuel projects are excluded from transition finance');
+    } else if (greenwashingRisk.overallRisk === 'high' && greenwashingRisk.riskScore >= 80) {
+      eligibilityStatus = 'ineligible';
+      ineligibilityReasons.push('High greenwashing risk - significant red flags detected');
+    } else if (adjustedScore >= 60 && greenwashingRisk.overallRisk !== 'high') {
       eligibilityStatus = 'eligible';
-    } else if (lmaScore.overall >= 50) {
+    } else if (adjustedScore >= 30) {
       eligibilityStatus = 'partial';
     } else {
       eligibilityStatus = 'ineligible';
+      ineligibilityReasons.push('Project does not meet minimum transition finance requirements');
     }
 
     // Build response
@@ -60,7 +108,10 @@ export async function POST(request: NextRequest) {
       countryName: countryProfile?.name || project.country,
       sector: project.sector,
       eligibilityStatus,
-      overallScore: lmaScore.overall,
+      ineligibilityReasons,
+      overallScore: adjustedScore, // Now reflects greenwashing penalty
+      lmaBaseScore: lmaScore.overall, // Raw LMA score before penalty
+      greenwashingPenalty, // Points deducted for greenwashing risk
       lmaComponents: lmaScore.components,
       greenwashingRisk: {
         level: greenwashingRisk.overallRisk,
@@ -82,6 +133,10 @@ export async function POST(request: NextRequest) {
         specialPrograms: m.dfi.specialPrograms,
       })),
       blendedStructure,
+      kpiRecommendations: kpiRecommendations.kpis,
+      sptRecommendations: kpiRecommendations.spts,
+      frameworksReferenced: kpiRecommendations.frameworksReferenced,
+      kpiAiGenerated: kpiRecommendations.aiGenerated,
       countryInfo: countryProfile ? {
         region: countryProfile.region,
         legalSystem: countryProfile.legalSystem,
@@ -106,77 +161,107 @@ export async function POST(request: NextRequest) {
   }
 }
 
+interface LMAFeedbackItem {
+  status: 'met' | 'partial' | 'missing';
+  description: string;
+  action?: string; // What to do if not met
+}
+
 function calculateLMAScore(project: ProjectInput): {
   overall: number;
   components: {
     name: string;
     score: number;
     maxScore: number;
-    feedback: string[];
+    feedback: LMAFeedbackItem[];
   }[];
 } {
-  const components: { name: string; score: number; maxScore: number; feedback: string[] }[] = [];
+  const components: { name: string; score: number; maxScore: number; feedback: LMAFeedbackItem[] }[] = [];
 
   // Component 1: Strategy Alignment (20 points)
   let strategyScore = 0;
-  const strategyFeedback: string[] = [];
+  const strategyFeedback: LMAFeedbackItem[] = [];
 
   if (project.hasPublishedPlan) {
     strategyScore += 10;
-    strategyFeedback.push('Published transition plan exists');
+    strategyFeedback.push({ status: 'met', description: 'Published transition plan exists' });
   } else {
-    strategyFeedback.push('Missing: Published transition plan');
+    strategyFeedback.push({
+      status: 'missing',
+      description: 'No published transition plan',
+      action: 'Publish a board-approved transition strategy document outlining decarbonization pathway, interim targets, and implementation timeline'
+    });
   }
 
   if (project.transitionStrategy.toLowerCase().includes('sbti') ||
       project.transitionStrategy.toLowerCase().includes('science-based')) {
     strategyScore += 5;
-    strategyFeedback.push('References science-based targets');
+    strategyFeedback.push({ status: 'met', description: 'References science-based targets (SBTi)' });
+  } else {
+    strategyFeedback.push({
+      status: 'missing',
+      description: 'No SBTi alignment mentioned',
+      action: 'Commit to Science Based Targets initiative (SBTi) and submit targets for validation at sciencebasedtargets.org'
+    });
   }
 
   if (project.transitionStrategy.toLowerCase().includes('paris') ||
       project.transitionStrategy.toLowerCase().includes('1.5')) {
     strategyScore += 5;
-    strategyFeedback.push('References Paris Agreement alignment');
+    strategyFeedback.push({ status: 'met', description: 'Paris Agreement 1.5°C alignment referenced' });
+  } else {
+    strategyFeedback.push({
+      status: 'missing',
+      description: 'No Paris Agreement alignment',
+      action: 'Demonstrate how project contributes to national NDC targets and Paris Agreement goals'
+    });
   }
 
-  components.push({
-    name: 'Strategy Alignment',
-    score: strategyScore,
-    maxScore: 20,
-    feedback: strategyFeedback,
-  });
+  components.push({ name: 'Strategy Alignment', score: strategyScore, maxScore: 20, feedback: strategyFeedback });
 
   // Component 2: Use of Proceeds (20 points)
   let proceedsScore = 0;
-  const proceedsFeedback: string[] = [];
+  const proceedsFeedback: LMAFeedbackItem[] = [];
 
   if (project.description.length > 100) {
     proceedsScore += 10;
-    proceedsFeedback.push('Clear project description provided');
+    proceedsFeedback.push({ status: 'met', description: 'Clear project description provided' });
+  } else {
+    proceedsFeedback.push({
+      status: 'missing',
+      description: 'Project description too brief',
+      action: 'Provide detailed description of project activities, technologies, and expected environmental outcomes (min. 200 words)'
+    });
   }
 
   if (project.projectType) {
     proceedsScore += 5;
-    proceedsFeedback.push('Project type specified');
+    proceedsFeedback.push({ status: 'met', description: 'Project type specified' });
+  } else {
+    proceedsFeedback.push({
+      status: 'missing',
+      description: 'Project type not specified',
+      action: 'Categorize project type (e.g., renewable energy, energy efficiency, clean transport, sustainable agriculture)'
+    });
   }
 
-  const cleanTerms = ['renewable', 'solar', 'wind', 'efficiency', 'clean', 'green', 'transition'];
+  const cleanTerms = ['renewable', 'solar', 'wind', 'efficiency', 'clean', 'green', 'transition', 'decarbonization'];
   if (cleanTerms.some(term => project.description.toLowerCase().includes(term))) {
     proceedsScore += 5;
-    proceedsFeedback.push('Proceeds support transition activities');
+    proceedsFeedback.push({ status: 'met', description: 'Proceeds clearly support transition activities' });
+  } else {
+    proceedsFeedback.push({
+      status: 'missing',
+      description: 'Transition use of proceeds unclear',
+      action: 'Clearly articulate how funds will be used for climate transition (renewable energy, efficiency improvements, clean technology)'
+    });
   }
 
-  components.push({
-    name: 'Use of Proceeds',
-    score: proceedsScore,
-    maxScore: 20,
-    feedback: proceedsFeedback,
-  });
+  components.push({ name: 'Use of Proceeds', score: proceedsScore, maxScore: 20, feedback: proceedsFeedback });
 
   // Component 3: Target Ambition (20 points)
   let ambitionScore = 0;
-  const ambitionFeedback: string[] = [];
+  const ambitionFeedback: LMAFeedbackItem[] = [];
 
   const totalCurrent = project.currentEmissions.scope1 + project.currentEmissions.scope2;
   const totalTarget = project.targetEmissions.scope1 + project.targetEmissions.scope2;
@@ -186,85 +271,128 @@ function calculateLMAScore(project: ProjectInput): {
 
     if (reduction >= 42) {
       ambitionScore += 15;
-      ambitionFeedback.push(`Strong reduction target: ${reduction.toFixed(1)}% (exceeds 1.5°C pathway)`);
+      ambitionFeedback.push({ status: 'met', description: `Strong reduction target: ${reduction.toFixed(1)}% (exceeds 1.5°C pathway requirement of 42%)` });
     } else if (reduction >= 25) {
       ambitionScore += 10;
-      ambitionFeedback.push(`Moderate reduction target: ${reduction.toFixed(1)}%`);
+      ambitionFeedback.push({
+        status: 'partial',
+        description: `Moderate reduction target: ${reduction.toFixed(1)}%`,
+        action: `Increase ambition to ≥42% reduction by 2030 to align with SBTi 1.5°C pathway (current gap: ${(42 - reduction).toFixed(1)}%)`
+      });
     } else if (reduction > 0) {
       ambitionScore += 5;
-      ambitionFeedback.push(`Weak reduction target: ${reduction.toFixed(1)}% (below science-based)`);
+      ambitionFeedback.push({
+        status: 'partial',
+        description: `Weak reduction target: ${reduction.toFixed(1)}%`,
+        action: `Target is below science-based threshold. Increase to ≥42% by 2030. Consider additional measures: efficiency upgrades, renewable energy, process changes`
+      });
     }
   } else {
-    ambitionFeedback.push('Missing: Baseline and target emissions data');
+    ambitionFeedback.push({
+      status: 'missing',
+      description: 'No baseline or target emissions data',
+      action: 'Conduct GHG inventory (Scope 1 & 2) following GHG Protocol. Set reduction targets aligned with 1.5°C pathway (min. 42% by 2030)'
+    });
   }
 
   if (project.targetYear <= 2030) {
     ambitionScore += 5;
-    ambitionFeedback.push('Near-term target (by 2030)');
+    ambitionFeedback.push({ status: 'met', description: `Near-term target year: ${project.targetYear}` });
+  } else if (project.targetYear > 2030 && project.targetYear <= 2050) {
+    ambitionFeedback.push({
+      status: 'partial',
+      description: `Long-term target year: ${project.targetYear}`,
+      action: 'Add interim 2030 target alongside long-term goal. DFIs require near-term milestones to track progress'
+    });
+  } else {
+    ambitionFeedback.push({
+      status: 'missing',
+      description: 'No target year specified',
+      action: 'Set target year for emissions reduction (2030 for interim, 2050 for net-zero)'
+    });
   }
 
-  components.push({
-    name: 'Target Ambition',
-    score: ambitionScore,
-    maxScore: 20,
-    feedback: ambitionFeedback,
-  });
+  components.push({ name: 'Target Ambition', score: ambitionScore, maxScore: 20, feedback: ambitionFeedback });
 
   // Component 4: Reporting & Verification (20 points)
   let reportingScore = 0;
-  const reportingFeedback: string[] = [];
+  const reportingFeedback: LMAFeedbackItem[] = [];
 
   if (project.thirdPartyVerification) {
     reportingScore += 15;
-    reportingFeedback.push('Third-party verification in place');
+    reportingFeedback.push({ status: 'met', description: 'Third-party verification in place' });
   } else {
-    reportingFeedback.push('Missing: Third-party verification');
+    reportingFeedback.push({
+      status: 'missing',
+      description: 'No third-party verification',
+      action: 'Engage independent verifier (e.g., DNV, KPMG, EY) to verify emissions data and transition claims. Consider obtaining Second Party Opinion for green/transition credentials'
+    });
   }
 
   if (project.currentEmissions.scope3 && project.currentEmissions.scope3 > 0) {
     reportingScore += 5;
-    reportingFeedback.push('Scope 3 emissions measured');
+    reportingFeedback.push({ status: 'met', description: 'Scope 3 emissions measured and reported' });
+  } else {
+    const scope3Material = ['manufacturing', 'agriculture', 'mining'].includes(project.sector);
+    reportingFeedback.push({
+      status: scope3Material ? 'missing' : 'partial',
+      description: 'Scope 3 emissions not reported',
+      action: scope3Material
+        ? 'Scope 3 likely material for your sector. Conduct value chain emissions assessment following GHG Protocol Scope 3 Standard'
+        : 'Consider Scope 3 screening to identify material categories (supply chain, product use, etc.)'
+    });
   }
 
-  components.push({
-    name: 'Reporting & Verification',
-    score: reportingScore,
-    maxScore: 20,
-    feedback: reportingFeedback,
-  });
+  components.push({ name: 'Reporting & Verification', score: reportingScore, maxScore: 20, feedback: reportingFeedback });
 
   // Component 5: Project Selection (20 points)
   let selectionScore = 0;
-  const selectionFeedback: string[] = [];
+  const selectionFeedback: LMAFeedbackItem[] = [];
 
   if (project.sector === 'energy') {
     selectionScore += 10;
-    selectionFeedback.push('Energy sector - high transition relevance');
+    selectionFeedback.push({ status: 'met', description: 'Energy sector - high transition relevance and DFI priority' });
   } else {
     selectionScore += 5;
-    selectionFeedback.push('Sector has transition potential');
+    selectionFeedback.push({
+      status: 'partial',
+      description: `${project.sector} sector has transition potential`,
+      action: 'Highlight sector-specific decarbonization pathway and alignment with regional transition priorities'
+    });
   }
 
   if (project.totalCost > 0 && project.debtAmount > 0) {
     selectionScore += 5;
-    selectionFeedback.push('Clear financing structure');
+    selectionFeedback.push({ status: 'met', description: 'Financing structure clearly defined' });
+  } else {
+    selectionFeedback.push({
+      status: 'missing',
+      description: 'Financing structure incomplete',
+      action: 'Provide detailed project costs, debt/equity split, and proposed financing structure'
+    });
   }
 
-  if (project.equityAmount / project.totalCost >= 0.2) {
+  const equityRatio = project.totalCost > 0 ? project.equityAmount / project.totalCost : 0;
+  if (equityRatio >= 0.2) {
     selectionScore += 5;
-    selectionFeedback.push('Adequate equity contribution');
+    selectionFeedback.push({ status: 'met', description: `Adequate equity contribution: ${(equityRatio * 100).toFixed(0)}%` });
+  } else if (equityRatio > 0) {
+    selectionFeedback.push({
+      status: 'partial',
+      description: `Low equity contribution: ${(equityRatio * 100).toFixed(0)}%`,
+      action: 'Increase equity to ≥20% of project cost. DFIs typically require meaningful sponsor commitment'
+    });
+  } else {
+    selectionFeedback.push({
+      status: 'missing',
+      description: 'No equity contribution specified',
+      action: 'Specify equity contribution (typically 20-30% of project cost required by DFIs)'
+    });
   }
 
-  components.push({
-    name: 'Project Selection',
-    score: selectionScore,
-    maxScore: 20,
-    feedback: selectionFeedback,
-  });
+  components.push({ name: 'Project Selection', score: selectionScore, maxScore: 20, feedback: selectionFeedback });
 
-  // Calculate overall score
   const overall = components.reduce((sum, c) => sum + c.score, 0);
-
   return { overall, components };
 }
 

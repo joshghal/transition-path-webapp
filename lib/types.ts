@@ -66,6 +66,9 @@ export interface ProjectInput {
   // Project Details
   technology?: string;
   timeline?: ProjectTimeline;
+
+  // Raw document text for greenwashing analysis (preserves inconsistencies)
+  rawDocumentText?: string;
 }
 
 // ============================================

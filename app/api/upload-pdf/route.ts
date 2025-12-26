@@ -18,26 +18,49 @@ async function extractProjectData(text: string): Promise<{
   projectName: string;
   country: string;
   sector: string;
+  projectType: string;
   description: string;
   climateTargets: string;
   financingNeeded: number | null;
+  debtAmount: number | null;
+  equityAmount: number | null;
   transitionPlan: string;
   baselineEmissions: string;
+  currentScope1: number | null;
+  currentScope2: number | null;
+  currentScope3: number | null;
+  targetScope1: number | null;
+  targetScope2: number | null;
+  targetScope3: number | null;
+  targetYear: number | null;
   verificationStatus: string;
 }> {
-  const systemPrompt = `You are an expert at extracting project information from documents for transition finance assessments. Extract the requested fields and respond in JSON format only.`;
+  const systemPrompt = `You are an expert at extracting project information from documents for transition finance assessments. Extract ALL requested fields with precision. For numeric fields, extract actual numbers mentioned in the document. Respond in JSON format only.`;
 
   const userPrompt = `Analyze the following document text and extract project information. Extract these fields:
 
 1. projectName: The name of the project or company
-2. country: The country where the project is located (African countries preferred)
-3. sector: The industry sector (e.g., Energy, Manufacturing, Agriculture, Transport, Mining, Real Estate)
-4. description: A brief description of the project and its transition goals (2-3 sentences)
-5. climateTargets: Any climate or emissions reduction targets mentioned (e.g., "50% reduction by 2030")
-6. financingNeeded: The financing amount needed in USD (just the number, or null if not mentioned)
-7. transitionPlan: Summary of any transition plan or strategy mentioned
-8. baselineEmissions: Any baseline emissions data mentioned
-9. verificationStatus: Any third-party verification or certification mentioned
+2. country: The country where the project is located
+3. sector: The industry sector (Energy, Manufacturing, Agriculture, Transport, Mining, Real Estate, Water)
+4. projectType: Specific project type (e.g., "Solar PV", "Wind Farm", "Coffee Processing", "EV Fleet")
+5. description: A brief description of the project and its transition goals (2-3 sentences)
+6. climateTargets: Any climate or emissions reduction targets mentioned as text
+7. financingNeeded: Total financing/investment amount in USD (number only, convert from millions if needed)
+8. debtAmount: Debt/loan amount in USD (number only, or null if not mentioned)
+9. equityAmount: Equity amount in USD (number only, or null if not mentioned)
+10. transitionPlan: Summary of transition plan or strategy
+11. baselineEmissions: Baseline emissions description as text
+12. currentScope1: Current Scope 1 emissions in tCO2e/year (number only, or null)
+13. currentScope2: Current Scope 2 emissions in tCO2e/year (number only, or null)
+14. currentScope3: Current Scope 3 emissions in tCO2e/year (number only, or null)
+15. targetScope1: Target Scope 1 emissions in tCO2e/year (number only, or null)
+16. targetScope2: Target Scope 2 emissions in tCO2e/year (number only, or null)
+17. targetScope3: Target Scope 3 emissions in tCO2e/year (number only, or null)
+18. targetYear: Target year for emissions reduction (e.g., 2030, or null if not mentioned)
+19. verificationStatus: Any third-party verification or certification mentioned
+
+IMPORTANT: For emissions fields, look for numbers like "12,500 tCO2e" or "current emissions: 15,000 tonnes CO2".
+For financing, convert "USD 25 million" to 25000000.
 
 Document text:
 ${text.substring(0, 8000)}
@@ -47,11 +70,21 @@ Respond in JSON format only:
   "projectName": "",
   "country": "",
   "sector": "",
+  "projectType": "",
   "description": "",
   "climateTargets": "",
   "financingNeeded": null,
+  "debtAmount": null,
+  "equityAmount": null,
   "transitionPlan": "",
   "baselineEmissions": "",
+  "currentScope1": null,
+  "currentScope2": null,
+  "currentScope3": null,
+  "targetScope1": null,
+  "targetScope2": null,
+  "targetScope3": null,
+  "targetYear": null,
   "verificationStatus": ""
 }`;
 
@@ -76,11 +109,21 @@ Respond in JSON format only:
       projectName: '',
       country: '',
       sector: '',
+      projectType: '',
       description: '',
       climateTargets: '',
       financingNeeded: null,
+      debtAmount: null,
+      equityAmount: null,
       transitionPlan: '',
       baselineEmissions: '',
+      currentScope1: null,
+      currentScope2: null,
+      currentScope3: null,
+      targetScope1: null,
+      targetScope2: null,
+      targetScope3: null,
+      targetYear: null,
       verificationStatus: '',
     };
   }
@@ -125,6 +168,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       extractedText: text.substring(0, 2000), // Preview of extracted text
+      rawDocumentText: text, // Full text for greenwashing analysis
       extractedFields: extractedData,
       textLength: text.length,
     });

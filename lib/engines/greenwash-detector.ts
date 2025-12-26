@@ -15,6 +15,84 @@ const RED_FLAG_PATTERNS: {
   description: string;
   recommendation: string;
 }[] = [
+  // ELIGIBILITY RED FLAGS (immediate disqualification)
+  {
+    id: 'fossil_sector',
+    category: 'technology',
+    severity: 'high',
+    pattern: (project) => {
+      const desc = (project.description + ' ' + project.transitionStrategy + ' ' + project.projectType).toLowerCase();
+      const fossilTerms = ['oil drilling', 'oil exploration', 'oil production', 'offshore drilling',
+        'petroleum', 'natural gas extraction', 'coal mining', 'coal power', 'coal plant',
+        'barrels per day', 'fossil fuel expansion', 'new oil wells', 'gas field'];
+      return fossilTerms.some(term => desc.includes(term));
+    },
+    description: 'Project involves fossil fuel extraction/expansion - NOT ELIGIBLE for transition finance',
+    recommendation: 'Fossil fuel expansion projects cannot be financed under transition frameworks'
+  },
+  {
+    id: 'coal_project',
+    category: 'technology',
+    severity: 'high',
+    pattern: (project) => {
+      const desc = (project.description + ' ' + project.projectType).toLowerCase();
+      return desc.includes('coal') && (desc.includes('power') || desc.includes('plant') || desc.includes('generation') || desc.includes('mining'));
+    },
+    description: 'Coal projects are explicitly excluded from all transition taxonomies',
+    recommendation: 'Coal cannot be financed under any legitimate green/transition framework'
+  },
+  // GREENWASHING RED FLAGS
+  {
+    id: 'exaggerated_claims',
+    category: 'ambition',
+    severity: 'high',
+    pattern: (project) => {
+      const text = (project.description + ' ' + project.transitionStrategy).toLowerCase();
+      // Claims of 99%+ reduction, "guaranteed" returns, "zero" operational costs
+      return text.includes('99') || text.includes('100%') ||
+        text.includes('guaranteed') || text.includes('no risk') ||
+        text.includes('zero cost') || text.includes('500%') ||
+        text.includes('unlimited');
+    },
+    description: 'Exaggerated or unrealistic claims detected - potential greenwashing',
+    recommendation: 'Remove exaggerated claims and provide realistic, verifiable projections'
+  },
+  {
+    id: 'proprietary_unverified',
+    category: 'verification',
+    severity: 'high',
+    pattern: (project) => {
+      const text = (project.description + ' ' + project.transitionStrategy).toLowerCase();
+      return (text.includes('proprietary') || text.includes('secret') || text.includes('confidential')) &&
+        !project.thirdPartyVerification;
+    },
+    description: 'Claims based on proprietary/secret technology without independent verification',
+    recommendation: 'Provide third-party verification for all technology and emissions claims'
+  },
+  {
+    id: 'vague_description',
+    category: 'commitment',
+    severity: 'medium',
+    pattern: (project) => {
+      // Very short or vague descriptions
+      return project.description.length < 50 ||
+        project.description.toLowerCase().includes('various') ||
+        project.description.toLowerCase().includes('to be determined') ||
+        project.description.toLowerCase().includes('tbd');
+    },
+    description: 'Project description is too vague or incomplete',
+    recommendation: 'Provide detailed project description with specific activities and expected outcomes'
+  },
+  {
+    id: 'missing_financials',
+    category: 'commitment',
+    severity: 'medium',
+    pattern: (project) => {
+      return project.totalCost === 0 || (project.debtAmount === 0 && project.equityAmount === 0);
+    },
+    description: 'Missing or incomplete financial information',
+    recommendation: 'Provide detailed project costs and financing structure'
+  },
   {
     id: 'vague_commitment',
     category: 'commitment',
@@ -112,6 +190,93 @@ const RED_FLAG_PATTERNS: {
     pattern: (project) => project.currentEmissions.scope1 === 0 && project.currentEmissions.scope2 === 0,
     description: 'No baseline emissions data provided',
     recommendation: 'Establish robust emissions baseline with third-party verification'
+  },
+  // DOCUMENT INCONSISTENCY RED FLAGS
+  // These patterns check rawDocumentText if available (preserves original document issues)
+  {
+    id: 'explicit_inconsistency',
+    category: 'verification',
+    severity: 'high',
+    pattern: (project) => {
+      const text = (project.rawDocumentText || project.description + ' ' + project.transitionStrategy).toLowerCase();
+      return text.includes('inconsistenc') || text.includes('discrepanc') ||
+        text.includes('does not match') || text.includes('contradicts') ||
+        text.includes('mathematically impossible');
+    },
+    description: 'Document contains explicit inconsistencies or contradictions',
+    recommendation: 'Resolve all internal inconsistencies before submitting - this is a major red flag for DFIs'
+  },
+  {
+    id: 'unrealistic_payback',
+    category: 'commitment',
+    severity: 'high',
+    pattern: (project) => {
+      const text = (project.rawDocumentText || project.description + ' ' + project.transitionStrategy).toLowerCase();
+      // Look for signs of unrealistic financial projections
+      return (text.includes('payback') && text.includes('year')) &&
+        (text.includes('impossible') || text.includes('unrealistic'));
+    },
+    description: 'Financial projections appear unrealistic or impossible',
+    recommendation: 'Provide realistic financial model with achievable repayment schedule'
+  },
+  {
+    id: 'ownership_exceeds_100',
+    category: 'verification',
+    severity: 'high',
+    pattern: (project) => {
+      const text = (project.rawDocumentText || project.description + ' ' + project.transitionStrategy).toLowerCase();
+      return text.includes('115%') || (text.includes('exceed') && text.includes('100%')) ||
+        text.includes('totals exceed');
+    },
+    description: 'Ownership structure or allocations exceed 100%',
+    recommendation: 'Correct ownership/allocation errors - fundamental data integrity issue'
+  },
+  {
+    id: 'unverifiable_verification',
+    category: 'verification',
+    severity: 'high',
+    pattern: (project) => {
+      const text = (project.rawDocumentText || project.description + ' ' + project.transitionStrategy).toLowerCase();
+      return (text.includes('no online presence') || text.includes('no attachment') ||
+        text.includes('cannot be verified') || text.includes('unverifiable')) &&
+        (text.includes('audit') || text.includes('verification') || text.includes('certified'));
+    },
+    description: 'Claimed verification or certification cannot be verified',
+    recommendation: 'Provide verifiable third-party credentials from recognized auditors (DNV, KPMG, EY, etc.)'
+  },
+  {
+    id: 'conflicting_numbers',
+    category: 'baseline',
+    severity: 'high',
+    pattern: (project) => {
+      const text = (project.rawDocumentText || project.description + ' ' + project.transitionStrategy).toLowerCase();
+      return text.includes('however') && (text.includes('states') || text.includes('claims')) &&
+        (text.includes('reduction') || text.includes('emission') || text.includes('tonne'));
+    },
+    description: 'Conflicting emissions or reduction figures within document',
+    recommendation: 'Ensure all emissions figures are consistent throughout the document'
+  },
+  {
+    id: 'artisanal_mining_risk',
+    category: 'technology',
+    severity: 'medium',
+    pattern: (project) => {
+      const text = (project.rawDocumentText || project.description + ' ' + project.transitionStrategy + ' ' + project.projectType).toLowerCase();
+      return text.includes('artisanal') && text.includes('mining');
+    },
+    description: 'Artisanal mining operations carry elevated ESG and supply chain risks',
+    recommendation: 'Demonstrate compliance with OECD Due Diligence Guidance for responsible mineral supply chains'
+  },
+  {
+    id: 'cobalt_drc_risk',
+    category: 'technology',
+    severity: 'medium',
+    pattern: (project) => {
+      const text = (project.rawDocumentText || project.description + ' ' + project.transitionStrategy + ' ' + project.projectType).toLowerCase();
+      return text.includes('cobalt') && (text.includes('drc') || text.includes('congo'));
+    },
+    description: 'DRC cobalt mining has high ESG risk (child labor, conflict minerals)',
+    recommendation: 'Demonstrate full supply chain traceability and compliance with responsible mining standards'
   }
 ];
 

@@ -2,75 +2,531 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --foreground: #171717;
-  --background: #ffffff;
+/* ============================================
+   CUSTOM FONTS
+   ============================================ */
+
+@font-face {
+  font-family: 'Geograph';
+  src: url('/fonts/geograph-medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground: #ededed;
-    --background: #0a0a0a;
-  }
+/* ============================================
+   VERIDIAN - Premium Green Finance Brand
+   ============================================ */
+
+:root {
+  /* Primary - Deep Teal Green (Trustworthy, Financial) */
+  --veridian-50: #ecfdf5;
+  --veridian-100: #d1fae5;
+  --veridian-200: #a7f3d0;
+  --veridian-300: #6ee7b7;
+  --veridian-400: #34d399;
+  --veridian-500: #10b981;
+  --veridian-600: #059669;
+  --veridian-700: #047857;
+  --veridian-800: #065f46;
+  --veridian-900: #064e3b;
+  --veridian-950: #022c22;
+
+  /* Secondary - Finance Navy (Credibility) */
+  --navy-50: #f0f4f8;
+  --navy-100: #d9e2ec;
+  --navy-200: #bcccdc;
+  --navy-300: #9fb3c8;
+  --navy-400: #829ab1;
+  --navy-500: #627d98;
+  --navy-600: #486581;
+  --navy-700: #334e68;
+  --navy-800: #243b53;
+  --navy-900: #102a43;
+
+  /* Accent - Gold (Premium, Trust) */
+  --gold-400: #f6c343;
+  --gold-500: #d4a012;
+  --gold-600: #b8860b;
+
+  /* Semantic Colors (Cohesive with brand) */
+  --success: #059669;
+  --success-light: #d1fae5;
+  --warning: #b45309;
+  --warning-light: #fef3c7;
+  --error: #9f1239;
+  --error-light: #ffe4e6;
+
+  /* Neutrals */
+  --foreground: #1f2937;
+  --background: #f9fafb;
+  --background-alt: #f0fdf4;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Montserrat', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* Custom utilities */
+/* ============================================
+   BRAND GRADIENTS
+   ============================================ */
+
 .gradient-text {
-  @apply bg-gradient-to-r from-green-600 to-emerald-500 bg-clip-text text-transparent;
+  @apply bg-gradient-to-r from-veridian-700 via-veridian-600 to-veridian-500 bg-clip-text text-transparent;
 }
+
+.gradient-text-gold {
+  @apply bg-gradient-to-r from-veridian-700 to-gold-600 bg-clip-text text-transparent;
+}
+
+.gradient-bg {
+  @apply bg-gradient-to-br from-veridian-50 via-white to-veridian-100;
+}
+
+.gradient-bg-hero {
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 25%, #d1fae5 50%, #f0fdf4 75%, #ffffff 100%);
+}
+
+.gradient-bg-dark {
+  @apply bg-gradient-to-br from-veridian-900 via-veridian-800 to-navy-900;
+}
+
+/* ============================================
+   CARDS & CONTAINERS
+   ============================================ */
 
 .card {
-  @apply bg-white rounded-xl shadow-sm border border-gray-100 p-6;
+  @apply bg-white rounded-xl border border-gray-100 p-6;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.04);
 }
 
 .card-hover {
-  @apply hover:shadow-md hover:border-gray-200 transition-all duration-200;
+  @apply hover:border-veridian-200 hover:-translate-y-1 transition-all duration-300;
+}
+.card-hover:hover {
+  box-shadow: 0 12px 32px rgba(5, 150, 105, 0.1);
 }
 
+.card-premium {
+  @apply bg-white rounded-xl border border-veridian-100 p-6;
+  box-shadow: 0 4px 16px -1px rgba(5, 150, 105, 0.08), 0 2px 6px -1px rgba(5, 150, 105, 0.04);
+}
+
+.card-dark {
+  @apply bg-veridian-900 text-white rounded-xl shadow-lg p-6;
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+
 .btn-primary {
-  @apply bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors;
+  @apply bg-veridian-700 hover:bg-veridian-800 text-white font-semibold py-2.5 px-5 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md;
+}
+
+.btn-primary:active {
+  @apply bg-veridian-900 transform scale-[0.98];
 }
 
 .btn-secondary {
-  @apply bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors;
+  @apply bg-white hover:bg-veridian-50 text-veridian-800 font-semibold py-2.5 px-5 rounded-lg border-2 border-veridian-200 hover:border-veridian-300 transition-all duration-200;
 }
 
+.btn-gold {
+  @apply bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-600 hover:to-gold-600 text-white font-semibold py-2.5 px-5 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md;
+}
+
+.btn-outline {
+  @apply bg-transparent hover:bg-veridian-50 text-veridian-700 font-medium py-2 px-4 rounded-lg border border-veridian-300 hover:border-veridian-400 transition-all duration-200;
+}
+
+.btn-ghost {
+  @apply bg-transparent hover:bg-gray-100 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors;
+}
+
+/* ============================================
+   FORM ELEMENTS
+   ============================================ */
+
 .input {
-  @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all;
+  @apply w-full px-4 py-3 bg-white border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400;
+  @apply focus:ring-2 focus:ring-veridian-500 focus:border-veridian-500 focus:ring-opacity-50;
+  @apply outline-none transition-all duration-200;
+}
+
+.input:hover {
+  @apply border-gray-300;
+}
+
+.select {
+  @apply w-full px-4 py-3 bg-white border border-gray-200 rounded-lg text-gray-900;
+  @apply focus:ring-2 focus:ring-veridian-500 focus:border-veridian-500 focus:ring-opacity-50;
+  @apply outline-none transition-all duration-200 cursor-pointer;
 }
 
 .label {
-  @apply block text-sm font-medium text-gray-700 mb-1;
+  @apply block text-sm font-semibold text-gray-700 mb-2;
 }
 
-/* Score indicators */
+.textarea {
+  @apply w-full px-4 py-3 bg-white border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400;
+  @apply focus:ring-2 focus:ring-veridian-500 focus:border-veridian-500 focus:ring-opacity-50;
+  @apply outline-none transition-all duration-200 resize-none;
+}
+
+/* ============================================
+   STATUS & SCORE INDICATORS
+   ============================================ */
+
+/* Eligibility Status */
+.status-eligible {
+  @apply bg-veridian-50 text-veridian-800 border-veridian-200;
+}
+
+.status-partial {
+  @apply bg-amber-50 text-amber-800 border-amber-200;
+}
+
+.status-ineligible {
+  @apply bg-rose-50 text-rose-800 border-rose-200;
+}
+
+/* Score Colors */
 .score-high {
-  @apply text-green-600 bg-green-50;
+  @apply text-veridian-700 bg-veridian-50;
 }
 
 .score-medium {
-  @apply text-yellow-600 bg-yellow-50;
+  @apply text-amber-700 bg-amber-50;
 }
 
 .score-low {
-  @apply text-red-600 bg-red-50;
+  @apply text-rose-700 bg-rose-50;
 }
 
-/* Risk badges */
+/* Risk Badges */
 .risk-low {
-  @apply bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium;
+  @apply bg-veridian-100 text-veridian-800 px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide;
 }
 
 .risk-medium {
-  @apply bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium;
+  @apply bg-amber-100 text-amber-800 px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide;
 }
 
 .risk-high {
-  @apply bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium;
+  @apply bg-rose-100 text-rose-800 px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide;
 }
+
+/* ============================================
+   PROGRESS BARS
+   ============================================ */
+
+.progress-bar {
+  @apply w-full bg-gray-200 rounded-full h-2 overflow-hidden;
+}
+
+.progress-fill-high {
+  @apply h-full bg-gradient-to-r from-veridian-500 to-veridian-400 rounded-full transition-all duration-500;
+}
+
+.progress-fill-medium {
+  @apply h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full transition-all duration-500;
+}
+
+.progress-fill-low {
+  @apply h-full bg-gradient-to-r from-rose-500 to-rose-400 rounded-full transition-all duration-500;
+}
+
+/* ============================================
+   TYPOGRAPHY
+   ============================================ */
+
+.font-display {
+  font-family: 'Geograph', system-ui, sans-serif;
+}
+
+.heading-xl {
+  font-family: 'Geograph', system-ui, sans-serif;
+  @apply text-4xl md:text-5xl font-medium text-gray-900 tracking-tight;
+}
+
+.heading-lg {
+  font-family: 'Geograph', system-ui, sans-serif;
+  @apply text-3xl font-medium text-gray-900 tracking-tight;
+}
+
+.heading-md {
+  font-family: 'Geograph', system-ui, sans-serif;
+  @apply text-xl font-medium text-gray-900;
+}
+
+.text-muted {
+  @apply text-gray-500;
+}
+
+.text-brand {
+  @apply text-veridian-700;
+}
+
+/* ============================================
+   GLASSMORPHISM EFFECTS
+   ============================================ */
+
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 8px 32px rgba(5, 150, 105, 0.06);
+}
+
+.glass-card-hover {
+  @apply glass-card transition-all duration-300;
+}
+.glass-card-hover:hover {
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 16px 48px rgba(5, 150, 105, 0.15);
+  transform: translateY(-4px);
+}
+
+.glass-dark {
+  background: rgba(6, 78, 59, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-button {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 16px rgba(5, 150, 105, 0.06);
+}
+
+.glass-input {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.glass-nav {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(5, 150, 105, 0.1);
+}
+
+/* ============================================
+   BLOB BACKGROUNDS
+   ============================================ */
+
+.blob {
+  border-radius: 50%;
+  filter: blur(60px);
+  position: absolute;
+  pointer-events: none;
+}
+
+.blob-green {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.4), rgba(5, 150, 105, 0.3));
+}
+
+.blob-teal {
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.35), rgba(6, 182, 212, 0.25));
+}
+
+.blob-emerald {
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.3), rgba(110, 231, 183, 0.2));
+}
+
+.blob-cyan {
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.25), rgba(6, 182, 212, 0.2));
+}
+
+@keyframes blob-float {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(20px, -30px) scale(1.05);
+  }
+  50% {
+    transform: translate(-20px, 20px) scale(0.95);
+  }
+  75% {
+    transform: translate(30px, 10px) scale(1.02);
+  }
+}
+
+@keyframes blob-float-reverse {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(-30px, 20px) scale(0.95);
+  }
+  50% {
+    transform: translate(20px, -20px) scale(1.05);
+  }
+  75% {
+    transform: translate(-10px, -30px) scale(0.98);
+  }
+}
+
+.animate-blob {
+  animation: blob-float 20s ease-in-out infinite;
+}
+
+.animate-blob-reverse {
+  animation: blob-float-reverse 25s ease-in-out infinite;
+}
+
+.animate-blob-slow {
+  animation: blob-float 30s ease-in-out infinite;
+}
+
+/* ============================================
+   LEGACY SPECIAL EFFECTS
+   ============================================ */
+
+.glass-effect {
+  @apply bg-white/80 backdrop-blur-md;
+}
+
+.glow-green {
+  box-shadow: 0 0 40px rgba(16, 185, 129, 0.15);
+}
+
+.border-gradient {
+  border: 2px solid transparent;
+  background: linear-gradient(white, white) padding-box,
+              linear-gradient(135deg, #10b981, #047857) border-box;
+  border-radius: 0.75rem;
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@keyframes pulse-green {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+  }
+}
+
+.pulse-green {
+  animation: pulse-green 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, #f0fdf4 25%, #d1fae5 50%, #f0fdf4 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* ============================================
+   MARQUEE ANIMATION
+   ============================================ */
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+.marquee-container {
+  -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+}
+
+/* ============================================
+   SCROLL-TRIGGERED ANIMATIONS
+   ============================================ */
+
+.scroll-animate {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.scroll-animate.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.scroll-animate-left {
+  opacity: 0;
+  transform: translateX(-30px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.scroll-animate-left.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.scroll-animate-right {
+  opacity: 0;
+  transform: translateX(30px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.scroll-animate-right.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.scroll-animate-scale {
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.scroll-animate-scale.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Stagger delays for children */
+.stagger-1 { transition-delay: 0.1s; }
+.stagger-2 { transition-delay: 0.2s; }
+.stagger-3 { transition-delay: 0.3s; }
+.stagger-4 { transition-delay: 0.4s; }
+.stagger-5 { transition-delay: 0.5s; }
+.stagger-6 { transition-delay: 0.6s; }
+.stagger-7 { transition-delay: 0.7s; }
+.stagger-8 { transition-delay: 0.8s; }
