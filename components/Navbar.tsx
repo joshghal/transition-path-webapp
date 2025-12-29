@@ -67,6 +67,16 @@ export default function Navbar() {
               {/* Desktop Nav Links */}
               <div className="hidden md:flex items-center space-x-1">
                 <Link
+                  href="/docs"
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                    scrolled
+                      ? 'text-gray-600 hover:text-verdex-700 hover:bg-verdex-50'
+                      : 'text-gray-700 hover:text-verdex-700 hover:bg-white/50'
+                  }`}
+                >
+                  Docs
+                </Link>
+                <Link
                   href="/assess"
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
                     scrolled
@@ -128,6 +138,16 @@ export default function Navbar() {
       }`}>
         <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-verdex-lg border border-verdex-100 overflow-hidden">
           <div className="p-4 space-y-2">
+            <Link
+              href="/docs"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center px-4 py-3 rounded-xl text-gray-700 font-medium hover:bg-verdex-50 hover:text-verdex-700 transition-colors"
+            >
+              <svg className="w-5 h-5 mr-3 text-verdex-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+              </svg>
+              Documentation
+            </Link>
             <Link
               href="/assess"
               onClick={() => setMobileMenuOpen(false)}
