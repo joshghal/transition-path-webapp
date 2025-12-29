@@ -9,7 +9,7 @@ export default function ClauseLibraryPage() {
   return (
     <DocPage
       title="LMA Clause Search & Library"
-      description="Search, analyze, and generate LMA-compliant clauses for transition loan documentation from 24+ templates."
+      description="Search, analyze, and generate LMA-compliant clauses for transition loan documentation from 16+ templates."
       breadcrumbs={[{ label: 'Features' }, { label: 'Clause Library' }]}
       previousPage={{ title: 'KPI Generator', href: '/docs/features/kpi-generator' }}
       nextPage={{ title: 'Architecture', href: '/docs/technical/architecture' }}
@@ -25,8 +25,8 @@ export default function ClauseLibraryPage() {
       </h2>
 
       <p className="text-gray-700 leading-relaxed mb-6">
-        Verdex provides access to a comprehensive library of <strong>LMA-standard clauses</strong> derived from 24 Africa-specific documents, SBTi CORPORATE
-NET-ZERO STANDARD, Paris Aggrement, and the SLLP/Transition Loan Principles.
+        Verdex provides access to a comprehensive library of <strong>LMA-standard clauses</strong> derived from 16+ Africa-specific documents, SBTi CORPORATE
+NET-ZERO STANDARD, Paris Agreement, and the SLLP/Transition Loan Principles.
       </p>
 
       <h2 id="categories" className="text-2xl font-display font-semibold text-gray-900 mt-12 mb-4">

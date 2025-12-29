@@ -113,12 +113,12 @@ export default function ExecutiveSummaryPage() {
           {
             icon: <Search className="w-5 h-5" />,
             title: 'Clause Library',
-            description: 'Search and generate LMA-standard clauses from 24+ templates',
+            description: 'Search and generate LMA-standard clauses from 16+ templates',
           },
           {
             icon: <CheckCircle className="w-5 h-5" />,
             title: 'Paris Alignment',
-            description: 'Validate alignment with SBTi Net-Zero Standard V2',
+            description: 'Validate alignment with Paris Agreement & SBTi Net-Zero Standard V2',
           },
         ].map((feature, idx) => (
           <div key={idx} className="p-4 rounded-xl bg-white border border-gray-100 hover:border-verdex-200 transition-colors">
