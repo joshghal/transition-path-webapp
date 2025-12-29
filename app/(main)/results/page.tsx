@@ -1547,6 +1547,7 @@ export default function ResultsPage() {
                 <Link
                   href={`/search?q=${encodeURIComponent(clauseSearchQuery)}`}
                   className="text-xs text-verdex-600 hover:text-verdex-700 font-medium"
+                  target='_blank'
                 >
                   View All →
                 </Link>
@@ -1622,6 +1623,7 @@ export default function ResultsPage() {
               <Link
                 href={`/search?q=${encodeURIComponent(clauseSearchQuery)}`}
                 className="mt-4 block w-full text-center bg-verdex-50 hover:bg-verdex-100 text-verdex-700 font-medium text-sm py-2.5 rounded-xl transition-colors border border-verdex-200"
+                target='_blank'
               >
                 Search All LMA Clauses
               </Link>

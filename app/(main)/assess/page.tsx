@@ -511,25 +511,28 @@ export default function AssessPage() {
               </p>
               <div className="flex flex-wrap justify-center gap-2">
                 <a
-                  href="/samples/realistic/ethiopia-coffee.pdf"
+                  href="https://res.cloudinary.com/dap2zavrb/image/upload/v1766992675/ethiopia-coffee_njxyq4.pdf"
                   download
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-full transition-colors"
+                  target='_blank'
                 >
                   <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
                   Eligible
                 </a>
                 <a
-                  href="/samples/not-eligible/southafrica-coal.pdf"
+                  href="https://res.cloudinary.com/dap2zavrb/image/upload/v1766992786/southafrica-coal_aystex.pdf"
                   download
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-red-700 bg-red-50 hover:bg-red-100 rounded-full transition-colors"
+                  target='_blank'
                 >
                   <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
                   Ineligible
                 </a>
                 <a
-                  href="/samples/unrealistic/nigeria-greenwashing.pdf"
+                  href="https://res.cloudinary.com/dap2zavrb/image/upload/v1766992762/nigeria-greenwashing_v1jdqh.pdf"
                   download
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-full transition-colors"
+                  target='_blank'
                 >
                   <span className="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>
                   Greenwashing
