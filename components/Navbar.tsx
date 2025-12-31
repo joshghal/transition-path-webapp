@@ -12,8 +12,17 @@ export default function Navbar() {
       setScrolled(window.scrollY > 20);
     };
 
+    // Listen for custom scroll events from containers (e.g., search page with chat open)
+    const handleContainerScroll = (e: CustomEvent) => {
+      setScrolled(e.detail.scrollTop > 20);
+    };
+
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('containerScroll', handleContainerScroll as EventListener);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('containerScroll', handleContainerScroll as EventListener);
+    };
   }, []);
 
   // Close mobile menu when scrolling

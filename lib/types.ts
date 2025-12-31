@@ -372,3 +372,36 @@ export interface SearchResult {
     country?: string;
   };
 }
+
+// ============================================
+// AI CHAT TYPES
+// ============================================
+
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+  sources?: ChatSource[];
+  suggestedQuestions?: string[];
+}
+
+export interface ChatSource {
+  id: string;
+  clauseType: string;
+  preview: string;
+  score: number;
+}
+
+export interface ChatRequest {
+  message: string;
+  history: { role: 'user' | 'assistant'; content: string }[];
+}
+
+export interface ChatResponse {
+  response: string;
+  sources: ChatSource[];
+  suggestedQuestions: string[];
+  provider: string;
+  error?: string;
+}
