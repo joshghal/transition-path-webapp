@@ -1,51 +1,51 @@
-// Local Embeddings using @xenova/transformers
-// This runs embedding models directly in Node.js without external API calls
+// Remote Embeddings via Railway API
+// Replaces local @xenova/transformers which doesn't work on Vercel serverless
 
-let pipeline: any = null;
-let modelLoaded = false;
+const EMBEDDING_API_URL = process.env.EMBEDDING_API_URL || 'https://verdex-embedding-service-production.up.railway.app';
 
-const MODEL_NAME = 'Xenova/bge-small-en-v1.5';
-
-async function loadModel() {
-  if (modelLoaded) return;
-
+export async function generateEmbedding(text: string): Promise<number[]> {
   try {
-    // Dynamic import to avoid issues with Next.js
-    const { pipeline: transformersPipeline } = await import('@xenova/transformers');
-    pipeline = await transformersPipeline('feature-extraction', MODEL_NAME);
-    modelLoaded = true;
-    console.log('Embedding model loaded:', MODEL_NAME);
+    const response = await fetch(`${EMBEDDING_API_URL}/embed`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ input: text }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Embedding API error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.embedding;
   } catch (error) {
-    console.error('Failed to load embedding model:', error);
+    console.error('Failed to generate embedding:', error);
     throw error;
   }
 }
 
-export async function generateEmbedding(text: string): Promise<number[]> {
-  await loadModel();
-
-  if (!pipeline) {
-    throw new Error('Embedding model not loaded');
-  }
-
-  // Generate embedding
-  const output = await pipeline(text, { pooling: 'mean', normalize: true });
-
-  // Convert to array
-  const embedding = Array.from(output.data) as number[];
-
-  return embedding;
-}
-
 export async function generateEmbeddings(texts: string[]): Promise<number[][]> {
-  const embeddings: number[][] = [];
+  try {
+    // Batch request - more efficient than individual calls
+    const response = await fetch(`${EMBEDDING_API_URL}/embed`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ input: texts }),
+    });
 
-  for (const text of texts) {
-    const embedding = await generateEmbedding(text);
-    embeddings.push(embedding);
+    if (!response.ok) {
+      throw new Error(`Embedding API error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.embedding;
+  } catch (error) {
+    console.error('Failed to generate embeddings:', error);
+    throw error;
   }
-
-  return embeddings;
 }
 
 // Simple text-based similarity for fallback when Pinecone is empty
