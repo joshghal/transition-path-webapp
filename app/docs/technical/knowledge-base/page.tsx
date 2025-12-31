@@ -45,7 +45,7 @@ export default function KnowledgeBasePage() {
             <h3 className="font-semibold text-verdex-800 mb-3">Embeddings</h3>
             <ul className="space-y-2 text-verdex-700 text-sm">
               <li>• Model: BGE-small-en</li>
-              <li>• Dimension: 707</li>
+              <li>• Dimension: 384</li>
               <li>• Chunking: 500 tokens with overlap</li>
             </ul>
           </div>
