@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
     ];
 
     // Step 7: Format sources for response
-    const sources = relevantClauses.slice(0, 3).map(clause => ({
+    const sources = relevantClauses.slice(0, 6).map(clause => ({
       id: clause.id,
       clauseType: clause.metadata.clauseType || 'general',
       preview: clause.content.substring(0, 100) + '...',
@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json<ChatResponseBody>({
       response: responseText,
       sources,
-      suggestedQuestions: suggestedQuestions.slice(0, 3),
+      suggestedQuestions: suggestedQuestions.slice(0, 6),
       provider: 'asi1'
     });
 

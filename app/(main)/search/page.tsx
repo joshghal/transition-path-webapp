@@ -483,7 +483,7 @@ function SearchPageContent() {
                         {selectedClause.metadata.source && (
                           <div className="flex items-start gap-2">
                             <span className="text-xs font-medium text-gray-500 w-16 flex-shrink-0">Source</span>
-                            <span className="text-xs text-gray-700 break-words">{selectedClause.metadata.source}</span>
+                            <span className="text-xs text-gray-700 break-words">{selectedClause.metadata.source.length > 35 ? `${selectedClause.metadata.source.substring(0, 35)}...` : selectedClause.metadata.source}</span>
                           </div>
                         )}
                         <div className="flex items-center gap-2">
