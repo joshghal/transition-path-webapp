@@ -590,7 +590,7 @@ RED FLAGS TO ADDRESS: ${data.redFlags.length > 0 ? data.redFlags.map(r => r.desc
 
 GENERATE DETAILED SECTIONS:
 
-### 6. CREDIBLE TRANSITION PLAN (Per LMA Guide - MANDATORY)
+### 6. TRANSITION PLAN
 **6.1 Decarbonization Pathway** - Table with columns: Timeframe | Year Range | Target | Key Actions
 - Short-term (${CURRENT_YEAR}-${CURRENT_YEAR + 2}): 15-25% reduction, immediate measures
 - Medium-term (${CURRENT_YEAR + 3}-2035): 40-50% reduction (SBTi 1.5°C aligned)

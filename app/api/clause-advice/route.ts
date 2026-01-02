@@ -28,10 +28,18 @@ Given a clause template and project context, provide practical, actionable guida
   "whenToUse": "<Conditions or scenarios when this clause should be included in the loan agreement>",
   "keyConsiderations": ["<consideration 1>", "<consideration 2>", "<consideration 3>"],
   "suggestedModifications": "<Any modifications to consider for African/transition finance context>",
-  "contextualizedExample": "<A concrete example of how this clause could be written specifically for this project, incorporating project name, sector, country, KPIs/SPTs where relevant. Write it as actual clause language that could be used in a loan agreement.>"
+  "contextualizedExample": "<The clause rewritten specifically for this project FROM THE BORROWER'S PERSPECTIVE. Replace all generic placeholders with actual project values.>"
 }
 
-Keep responses concise and actionable. Focus on practical guidance for project developers negotiating with lenders. The contextualizedExample should be a ready-to-use adaptation of the original clause tailored to the project.`;
+CRITICAL FOR contextualizedExample:
+- Write FROM THE PROJECT'S PERSPECTIVE as the Borrower
+- Replace "[Borrower]" or "[Company]" with the actual project name
+- Replace "[specify]", "[insert]", "[TBD]" with actual values from project context
+- Use actual KPI names, SPT targets, country, and sector from the project
+- Write as ready-to-use legal clause language the project can propose to lenders
+- Example: Instead of "The Borrower shall achieve [X]% reduction", write "Kigali Solar Farm Ltd shall achieve 45% emissions reduction"
+
+Keep responses concise and actionable. Focus on practical guidance for project developers negotiating with lenders.`;
 
 export async function POST(request: NextRequest) {
   try {
@@ -93,7 +101,7 @@ Provide practical guidance for this project developer on how to use this clause.
           'Consider local regulatory requirements'
         ],
         suggestedModifications: 'Work with your DFI partners to adapt standard LMA language for local context.',
-        contextualizedExample: `[This clause should be adapted to specifically reference ${projectContext.projectName}, the ${projectContext.sector} sector in ${projectContext.country}, and any relevant KPIs or SPTs established for the project.]`
+        contextualizedExample: `${projectContext.projectName} (the "Borrower"), operating in the ${projectContext.sector} sector in ${projectContext.country}, shall comply with the terms set forth herein.${projectContext.spts?.length ? ` The Borrower commits to achieving the following Sustainability Performance Targets: ${projectContext.spts.map(s => `${s.name} of ${s.target}`).join('; ')}.` : ''}${projectContext.kpis?.length ? ` Performance shall be measured against the following KPIs: ${projectContext.kpis.map(k => k.name).join(', ')}.` : ''}`
       },
       provider: 'fallback',
     });
