@@ -15,8 +15,8 @@ export default function KnowledgeBasePage() {
       nextPage={{ title: 'API Reference', href: '/docs/technical/api-reference' }}
       tableOfContents={[
         { id: 'sources', title: 'Document Sources', level: 2 },
-        { id: 'core-documents', title: 'LMA Core Documents (13)', level: 2 },
-        { id: 'africa-documents', title: 'Africa-Specific (5)', level: 2 },
+        { id: 'core-documents', title: 'LMA Core Documents (15)', level: 2 },
+        { id: 'africa-documents', title: 'Africa-Specific (3)', level: 2 },
         { id: 'vector-search', title: 'Vector Search', level: 2 },
       ]}
     >
@@ -27,8 +27,8 @@ export default function KnowledgeBasePage() {
       <DataTable
         headers={['Source', 'Docs', 'Use Case']}
         rows={[
-          [<a key="1" href="#core-documents" className="font-semibold text-verdex-700 hover:underline">LMA Core Documents</a>, '13', 'Facility agreements, guides, templates'],
-          [<a key="2" href="#africa-documents" className="font-semibold text-verdex-700 hover:underline">Africa-Specific Documents</a>, '5', 'Kenya, Nigeria, Tanzania, Uganda, Zambia, OHADA'],
+          [<a key="1" href="#core-documents" className="font-semibold text-verdex-700 hover:underline">LMA Core Documents</a>, '15', 'Facility agreements, guides, templates'],
+          [<a key="2" href="#africa-documents" className="font-semibold text-verdex-700 hover:underline">Africa-Specific Documents</a>, '3', 'Kenya, Nigeria, Tanzania, Uganda, Zambia, OHADA'],
           [<a key="3" href="https://www.lma.eu.com/application/files/9917/6035/1809/Guide_to_Transition_Loans_-_16_October_2025.pdf" target="_blank" rel="noopener noreferrer" className="text-verdex-600 hover:underline">LMA Transition Loan Guide</a>, '1', '5 Core Components validation'],
           [<a key="4" href="https://www.lma.eu.com/application/files/1917/4298/0817/Green_Loan_Principles_-_26_March_2025.pdf" target="_blank" rel="noopener noreferrer" className="text-verdex-600 hover:underline">Green Loan Principles (Mar 2025)</a>, '1', 'Green loan compliance'],
           [<a key="5" href="https://www.lma.eu.com/application/files/6317/4298/0865/Sustainability-Linked_Loan_Principles_-_26_March_2025.pdf" target="_blank" rel="noopener noreferrer" className="text-verdex-600 hover:underline">SLL Principles (Mar 2025)</a>, '1', 'Sustainability-linked loan compliance'],
@@ -38,7 +38,7 @@ export default function KnowledgeBasePage() {
       />
 
       <h2 id="core-documents" className="text-2xl font-display font-semibold text-gray-900 mt-12 mb-4">
-        LMA Core Documents (13)
+        LMA Core Documents (15)
       </h2>
 
       <p className="text-gray-600 mb-6">
@@ -61,6 +61,8 @@ export default function KnowledgeBasePage() {
           { name: 'Single Currency Revolving (Developing Markets)', category: 'Template' },
           { name: 'LMA Briefing - UK Mid-Market Trends', category: 'Briefing' },
           { name: 'Contractual Interpretation (Arnold v Britton)', category: 'Legal' },
+          { name: 'Green Loan Principles (Mar 2025)', category: 'Green' },
+          { name: 'SLL Principles (Mar 2025)', category: 'SLL' },
         ].map((doc, i) => (
           <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-gray-50">
             <span className="text-xs font-mono bg-verdex-100 text-verdex-700 px-2 py-1 rounded">{doc.category}</span>
@@ -70,7 +72,7 @@ export default function KnowledgeBasePage() {
       </div>
 
       <h2 id="africa-documents" className="text-2xl font-display font-semibold text-gray-900 mt-12 mb-4">
-        Africa-Specific Documents (5)
+        Africa-Specific Documents (3)
       </h2>
 
       <p className="text-gray-600 mb-6">
@@ -82,8 +84,6 @@ export default function KnowledgeBasePage() {
           { name: 'Africa and Renewables', category: 'Energy', url: 'https://www.lma.eu.com/application/files/5515/4990/3008/Africa_and_Renewables_FINAL.PDF' },
           { name: 'User Guide: Kenya, Nigeria, Tanzania, Uganda, Zambia', category: 'Guide', url: 'https://www.lma.eu.com/application/files/4915/4643/0846/User_Guide_to_Facility_Agreements_for_Use_in_Kenya_Nigeria_Tanzania_Uganda_and_Zambia.pdf' },
           { name: 'OHADA Guide (English) - Francophone Africa', category: 'Legal', url: 'https://www.lma.eu.com/application/files/8514/6859/4517/OHADA_ENGLISH.pdf' },
-          { name: 'Green Loan Principles (Mar 2025)', category: 'Green', url: 'https://www.lma.eu.com/application/files/1917/4298/0817/Green_Loan_Principles_-_26_March_2025.pdf' },
-          { name: 'SLL Principles (Mar 2025)', category: 'SLL', url: 'https://www.lma.eu.com/application/files/6317/4298/0865/Sustainability-Linked_Loan_Principles_-_26_March_2025.pdf' },
         ].map((doc, i) => (
           <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-verdex-50 transition-colors">
             <span className="text-xs font-mono bg-emerald-100 text-emerald-700 px-2 py-1 rounded">{doc.category}</span>
