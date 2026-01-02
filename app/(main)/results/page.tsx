@@ -98,6 +98,7 @@ interface ClauseAdvice {
   whenToUse: string;
   keyConsiderations: string[];
   suggestedModifications?: string;
+  contextualizedExample?: string;
 }
 
 interface RelevantClause {
@@ -234,8 +235,8 @@ function exportToPDF(result: AssessmentResult, relevantClauses?: RelevantClause[
   doc.setFontSize(12);
   doc.setTextColor(0, 0, 0);
   const statusLabel = result.eligibilityStatus === 'eligible' ? 'ELIGIBLE FOR TRANSITION LOAN' :
-                      result.eligibilityStatus === 'partial' ? 'PARTIALLY ELIGIBLE - GAPS IDENTIFIED' :
-                      'NOT YET ELIGIBLE - IMPROVEMENTS NEEDED';
+    result.eligibilityStatus === 'partial' ? 'PARTIALLY ELIGIBLE - GAPS IDENTIFIED' :
+      'NOT YET ELIGIBLE - IMPROVEMENTS NEEDED';
   doc.text(statusLabel, 20, yPos + 12);
 
   doc.setFontSize(20);
@@ -400,7 +401,7 @@ function exportToPDF(result: AssessmentResult, relevantClauses?: RelevantClause[
 
   // Use Verdex brand colors for risk levels
   const riskColor = result.greenwashingRisk.level === 'low' ? [5, 150, 105] :
-                    result.greenwashingRisk.level === 'medium' ? [180, 83, 9] : [159, 18, 57];
+    result.greenwashingRisk.level === 'medium' ? [180, 83, 9] : [159, 18, 57];
   doc.setFontSize(11);
   doc.setTextColor(riskColor[0], riskColor[1], riskColor[2]);
   doc.text(`${result.greenwashingRisk.level.toUpperCase()} RISK (Score: ${result.greenwashingRisk.score}/100)`, 14, yPos);
@@ -619,6 +620,7 @@ export default function ResultsPage() {
   const [clausesLoading, setClausesLoading] = useState(false);
   const [clauseSearchQuery, setClauseSearchQuery] = useState('');
   const [selectedClauseModal, setSelectedClauseModal] = useState<RelevantClause | null>(null);
+  const [originalClauseExpanded, setOriginalClauseExpanded] = useState(false);
   const [draftLoading, setDraftLoading] = useState(false);
   const [generatedDraft, setGeneratedDraft] = useState<string | null>(null);
   const [draftModalOpen, setDraftModalOpen] = useState(false);
@@ -695,13 +697,15 @@ export default function ResultsPage() {
           const results = await Promise.all(searchPromises);
           const allClauses = results.flatMap(r => r.results || []);
 
-          // Deduplicate and take top 5
+          // Deduplicate and take top 6
           const uniqueClauses = allClauses.reduce((acc: RelevantClause[], clause) => {
             if (!acc.find(c => c.id === clause.id)) {
               acc.push({ ...clause, adviceLoading: true });
             }
             return acc;
-          }, []).slice(0, 6);
+          }, [])
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 6)
 
           setRelevantClauses(uniqueClauses);
 
@@ -770,11 +774,11 @@ export default function ResultsPage() {
         { opacity: 0, y: -20 },
         { opacity: 1, y: 0, duration: 0.5 }
       )
-      .fromTo(statusRef.current,
-        { opacity: 0, scale: 0.95 },
-        { opacity: 1, scale: 1, duration: 0.4 },
-        '-=0.2'
-      );
+        .fromTo(statusRef.current,
+          { opacity: 0, scale: 0.95 },
+          { opacity: 1, scale: 1, duration: 0.4 },
+          '-=0.2'
+        );
 
       // Result cards with scroll-triggered stagger animation
       gsap.utils.toArray('.result-card').forEach((card, index) => {
@@ -1134,11 +1138,10 @@ export default function ResultsPage() {
                 <button
                   onClick={generateDraft}
                   disabled={draftLoading || !isExportReady}
-                  className={`font-semibold px-6 py-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 whitespace-nowrap ${
-                    draftLoading || !isExportReady
-                      ? 'bg-gradient-to-r from-verdex-300 to-teal-300 text-white cursor-not-allowed'
-                      : 'bg-gradient-to-r from-verdex-600 to-teal-600 hover:from-verdex-700 hover:to-teal-700 text-white shadow-lg hover:shadow-xl hover:scale-105'
-                  }`}
+                  className={`font-semibold px-6 py-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 whitespace-nowrap ${draftLoading || !isExportReady
+                    ? 'bg-gradient-to-r from-verdex-300 to-teal-300 text-white cursor-not-allowed'
+                    : 'bg-gradient-to-r from-verdex-600 to-teal-600 hover:from-verdex-700 hover:to-teal-700 text-white shadow-lg hover:shadow-xl hover:scale-105'
+                    }`}
                 >
                   {!isExportReady || draftLoading ? (
                     <>
@@ -1160,11 +1163,10 @@ export default function ResultsPage() {
                 <button
                   onClick={() => exportToPDF(result, relevantClauses)}
                   disabled={!isExportReady}
-                  className={`font-semibold px-6 py-3 rounded-xl shadow-verdex-sm transition-all duration-300 flex items-center justify-center gap-2 whitespace-nowrap ${
-                    isExportReady
-                      ? 'border-2 border-verdex-600 bg-white text-verdex-600 hover:shadow-verdex hover:scale-105'
-                      : 'bg-verdex-300 text-white cursor-not-allowed'
-                  }`}
+                  className={`font-semibold px-6 py-3 rounded-xl shadow-verdex-sm transition-all duration-300 flex items-center justify-center gap-2 whitespace-nowrap ${isExportReady
+                    ? 'border-2 border-verdex-600 bg-white text-verdex-600 hover:shadow-verdex hover:scale-105'
+                    : 'bg-verdex-300 text-white cursor-not-allowed'
+                    }`}
                 >
                   {isExportReady ? (
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1186,11 +1188,10 @@ export default function ResultsPage() {
             <button
               onClick={() => exportToPDF(result, relevantClauses)}
               disabled={!isExportReady}
-              className={`flex-1 font-semibold px-4 py-3 rounded-xl transition-all flex items-center justify-center gap-2 ${
-                isExportReady
-                  ? 'bg-verdex-700 hover:bg-verdex-800 text-white'
-                  : 'bg-verdex-300 text-white cursor-not-allowed'
-              }`}
+              className={`flex-1 font-semibold px-4 py-3 rounded-xl transition-all flex items-center justify-center gap-2 ${isExportReady
+                ? 'bg-verdex-700 hover:bg-verdex-800 text-white'
+                : 'bg-verdex-300 text-white cursor-not-allowed'
+                }`}
             >
               {isExportReady ? (
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1207,11 +1208,10 @@ export default function ResultsPage() {
             <button
               onClick={generateDraft}
               disabled={draftLoading || !isExportReady}
-              className={`flex-1 font-semibold px-4 py-3 rounded-xl transition-all flex items-center justify-center gap-2 ${
-                draftLoading || !isExportReady
-                  ? 'bg-gradient-to-r from-verdex-300 to-teal-300 text-white cursor-not-allowed'
-                  : 'bg-gradient-to-r from-verdex-600 to-teal-600 text-white'
-              }`}
+              className={`flex-1 font-semibold px-4 py-3 rounded-xl transition-all flex items-center justify-center gap-2 ${draftLoading || !isExportReady
+                ? 'bg-gradient-to-r from-verdex-300 to-teal-300 text-white cursor-not-allowed'
+                : 'bg-gradient-to-r from-verdex-600 to-teal-600 text-white'
+                }`}
             >
               {draftLoading ? (
                 <>
@@ -1250,23 +1250,21 @@ export default function ResultsPage() {
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
                       <div
-                        className={`h-2 rounded-full ${component.score / component.maxScore >= 0.7 ? 'bg-verdex-500' : component.score / component.maxScore >= 0.5 ? 'bg-amber-500' : 'bg-rose-500'}`}
+                        className={`h-2 rounded-full ${component.score / component.maxScore >= 0.7 ? 'bg-verdex-600' : component.score / component.maxScore >= 0.5 ? 'bg-amber-500' : 'bg-rose-500'}`}
                         style={{ width: `${(component.score / component.maxScore) * 100}%` }}
                       />
                     </div>
                     <div className="space-y-2">
                       {component.feedback.map((fb, i) => (
-                        <div key={i} className={`text-sm rounded-lg p-3 ${
-                          fb.status === 'met' ? 'bg-verdex-50 border border-verdex-200' :
+                        <div key={i} className={`text-sm rounded-lg p-3 ${fb.status === 'met' ? 'bg-verdex-50 border border-verdex-200' :
                           fb.status === 'partial' ? 'bg-amber-50 border border-amber-200' :
-                          'bg-rose-50 border border-rose-200'
-                        }`}>
+                            'bg-rose-50 border border-rose-200'
+                          }`}>
                           <div className="flex items-start gap-3">
-                            <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                              fb.status === 'met' ? 'bg-verdex-500' :
+                            <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${fb.status === 'met' ? 'bg-verdex-600' :
                               fb.status === 'partial' ? 'bg-amber-500' :
-                              'bg-rose-500'
-                            }`}>
+                                'bg-rose-500'
+                              }`}>
                               {fb.status === 'met' && (
                                 <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -1284,11 +1282,10 @@ export default function ResultsPage() {
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className={`font-medium ${
-                                fb.status === 'met' ? 'text-verdex-800' :
+                              <p className={`font-medium ${fb.status === 'met' ? 'text-verdex-800' :
                                 fb.status === 'partial' ? 'text-amber-800' :
-                                'text-rose-800'
-                              }`}>
+                                  'text-rose-800'
+                                }`}>
                                 {fb.description}
                               </p>
                               {fb.action && (
@@ -1312,7 +1309,7 @@ export default function ResultsPage() {
                 <div className="flex justify-between items-start mb-4">
                   <h2 className="text-xl font-display font-medium">Recommended KPIs & SPTs</h2>
                   {result.kpiAiGenerated && (
-                    <span className="bg-gradient-to-r from-verdex-500 to-teal-500 text-white text-xs px-2 py-1 rounded-full">
+                    <span className="bg-gradient-to-r from-verdex-600 to-teal-500 text-white text-xs px-2 py-1 rounded-full">
                       AI Generated
                     </span>
                   )}
@@ -1441,10 +1438,9 @@ export default function ResultsPage() {
             <div className="glass-card rounded-3xl p-6 result-card">
               <h2 className="text-xl font-display font-medium mb-4">Greenwashing Risk Assessment</h2>
               <div className="flex items-center gap-4 mb-4">
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  result.greenwashingRisk.level === 'low' ? 'risk-low' :
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${result.greenwashingRisk.level === 'low' ? 'risk-low' :
                   result.greenwashingRisk.level === 'medium' ? 'risk-medium' : 'risk-high'
-                }`}>
+                  }`}>
                   {result.greenwashingRisk.level.toUpperCase()} RISK
                 </span>
                 <span className="text-gray-600">Risk Score: {result.greenwashingRisk.score}/100</span>
@@ -1563,7 +1559,7 @@ export default function ResultsPage() {
                     <div
                       key={clause.id}
                       className="bg-white/60 border border-gray-200 rounded-xl p-3 hover:bg-white/80 transition-all cursor-pointer"
-                      onClick={() => setSelectedClauseModal(clause)}
+                      onClick={() => { setSelectedClauseModal(clause); setOriginalClauseExpanded(false); }}
                     >
                       {/* Header row */}
                       <div className="flex items-start justify-between gap-2 mb-2">
@@ -1583,11 +1579,10 @@ export default function ResultsPage() {
                       {/* Relevance score row */}
                       {clause.advice && (
                         <div className="mb-2">
-                          <span className={`text-xs px-2 py-0.5 rounded-full inline-flex items-center gap-1 ${
-                            clause.advice.relevanceScore >= 7 ? 'bg-emerald-100 text-emerald-800' :
+                          <span className={`text-xs px-2 py-0.5 rounded-full inline-flex items-center gap-1 ${clause.advice.relevanceScore >= 7 ? 'bg-emerald-100 text-emerald-800' :
                             clause.advice.relevanceScore >= 4 ? 'bg-amber-100 text-amber-800' :
-                            'bg-gray-100 text-gray-600'
-                          }`}>
+                              'bg-gray-100 text-gray-600'
+                            }`}>
                             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                             </svg>
@@ -1652,10 +1647,9 @@ export default function ResultsPage() {
                   </div>
                   <div className="flex justify-between">
                     <dt className="text-gray-500">Political Risk</dt>
-                    <dd className={`font-medium ${
-                      result.countryInfo.politicalRisk === 'low' ? 'text-verdex-600' :
+                    <dd className={`font-medium ${result.countryInfo.politicalRisk === 'low' ? 'text-verdex-600' :
                       result.countryInfo.politicalRisk === 'medium' ? 'text-amber-600' : 'text-rose-600'
-                    }`}>
+                      }`}>
                       {result.countryInfo.politicalRisk}
                     </dd>
                   </div>
@@ -1690,101 +1684,111 @@ export default function ResultsPage() {
           onClick={() => setSelectedClauseModal(null)}
         >
           <div
-            className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+            className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex justify-between items-start p-6 border-b border-gray-100">
-              <div>
-                <h3 className="font-display font-medium text-xl text-gray-900 mb-2">Clause Analysis</h3>
-                <div className="flex flex-wrap gap-2">
+            <div className="flex justify-between items-center px-6 py-4 border-b border-verdex-100 bg-verdex-50/30">
+              <div className="flex items-center gap-4">
+                <h3 className="font-medium text-verdex-900">Clause Analysis</h3>
+                <div className="flex items-center gap-2">
                   {selectedClauseModal.metadata.clauseType && (
-                    <span className="text-xs bg-verdex-100 text-verdex-800 px-3 py-1 rounded-full font-medium">
+                    <span className="text-xs text-verdex-600 font-medium">
                       {selectedClauseModal.metadata.clauseType.replace(/_/g, ' ')}
                     </span>
                   )}
                   {selectedClauseModal.metadata.documentType && (
-                    <span className="text-xs bg-teal-100 text-teal-800 px-3 py-1 rounded-full font-medium">
-                      {selectedClauseModal.metadata.documentType.replace(/_/g, ' ')}
-                    </span>
+                    <>
+                      <span className="text-verdex-300">·</span>
+                      <span className="text-xs text-verdex-600 font-medium">
+                        {selectedClauseModal.metadata.documentType.replace(/_/g, ' ')}
+                      </span>
+                    </>
                   )}
                   {selectedClauseModal.advice && (
-                    <span className={`text-xs px-3 py-1 rounded-full font-medium ${
-                      selectedClauseModal.advice.relevanceScore >= 7 ? 'bg-emerald-100 text-emerald-800' :
-                      selectedClauseModal.advice.relevanceScore >= 4 ? 'bg-amber-100 text-amber-800' :
-                      'bg-gray-100 text-gray-600'
-                    }`}>
-                      {selectedClauseModal.advice.relevanceScore}/10 relevance
-                    </span>
+                    <>
+                      <span className="text-verdex-300">·</span>
+                      <span className={`text-xs font-medium ${selectedClauseModal.advice.relevanceScore >= 7 ? 'text-emerald-600' :
+                        selectedClauseModal.advice.relevanceScore >= 4 ? 'text-amber-600' :
+                          'text-gray-500'
+                        }`}>
+                        {selectedClauseModal.advice.relevanceScore}/10 relevance
+                      </span>
+                    </>
                   )}
                 </div>
               </div>
               <button
                 onClick={() => setSelectedClauseModal(null)}
-                className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+                className="text-verdex-600 hover:text-verdex-600 transition-colors"
               >
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
             {/* Modal Content */}
-            <div className="p-6 overflow-auto max-h-[60vh]">
-              {/* AI Advice Section */}
-              {selectedClauseModal.advice ? (
-                <div className="mb-6 space-y-4">
-                  {/* Relevance Summary */}
-                  <div className="bg-verdex-50 border border-verdex-200 rounded-xl p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 bg-verdex-100 rounded-full flex items-center justify-center flex-shrink-0">
-                        <svg className="w-4 h-4 text-verdex-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                        </svg>
+            <div className="px-6 py-4 overflow-auto max-h-[60vh] space-y-5">
+              {/* Loading State */}
+              {selectedClauseModal.adviceLoading && (
+                <div className="flex items-center gap-3 text-verdex-600">
+                  <div className="w-4 h-4 border-2 border-verdex-200 border-t-verdex-600 rounded-full animate-spin" />
+                  <span className="text-sm">Analyzing...</span>
+                </div>
+              )}
+
+              {selectedClauseModal.advice && (
+                <div className="space-y-6">
+                  {/* Contextualized Example Clause - Minimal style */}
+                  {selectedClauseModal.advice.contextualizedExample && (
+                    <div className="group pb-6 border-b border-verdex-100">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-xs font-medium text-verdex-600 uppercase tracking-wider">Adapted for your project</span>
+                        <button
+                          onClick={() => navigator.clipboard.writeText(selectedClauseModal.advice?.contextualizedExample || '')}
+                          className="opacity-0 group-hover:opacity-100 text-verdex-600 hover:text-verdex-600 transition-all text-xs flex items-center gap-1"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                          Copy
+                        </button>
                       </div>
-                      <div>
-                        <h4 className="font-semibold text-verdex-900 text-sm mb-1">AI Analysis for Your Project</h4>
-                        <p className="text-sm text-verdex-800">{selectedClauseModal.advice.relevanceSummary}</p>
+                      <div className="relative pl-4 border-l-2 border-verdex-400">
+                        <p className="text-[15px] text-gray-800 leading-relaxed whitespace-pre-wrap">
+                          {selectedClauseModal.advice.contextualizedExample}
+                        </p>
                       </div>
                     </div>
+                  )}
+
+                  {/* AI Analysis Summary */}
+                  <div className="pb-6 border-b border-verdex-100">
+                    <p className="text-sm text-verdex-700 leading-relaxed">{selectedClauseModal.advice.relevanceSummary}</p>
                   </div>
 
-                  {/* How to Apply */}
-                  <div className="bg-white border border-gray-200 rounded-xl p-4">
-                    <h4 className="font-semibold text-gray-900 text-sm mb-2 flex items-center gap-2">
-                      <svg className="w-4 h-4 text-verdex-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                      </svg>
-                      How to Apply This Clause
-                    </h4>
-                    <p className="text-sm text-gray-700">{selectedClauseModal.advice.howToApply}</p>
-                  </div>
-
-                  {/* When to Use */}
-                  <div className="bg-white border border-gray-200 rounded-xl p-4">
-                    <h4 className="font-semibold text-gray-900 text-sm mb-2 flex items-center gap-2">
-                      <svg className="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      When to Use This Clause
-                    </h4>
-                    <p className="text-sm text-gray-700">{selectedClauseModal.advice.whenToUse}</p>
+                  {/* Two Column Grid: How to Apply & When to Use */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pb-6 border-b border-verdex-100">
+                    <div>
+                      <h4 className="text-xs font-medium text-verdex-600 uppercase tracking-wider mb-3">How to Apply</h4>
+                      <p className="text-sm text-gray-700 leading-relaxed">{selectedClauseModal.advice.howToApply}</p>
+                    </div>
+                    <div className="md:border-l md:border-verdex-100 md:pl-8">
+                      <h4 className="text-xs font-medium text-verdex-600 uppercase tracking-wider mb-3">When to Use</h4>
+                      <p className="text-sm text-gray-700 leading-relaxed">{selectedClauseModal.advice.whenToUse}</p>
+                    </div>
                   </div>
 
                   {/* Key Considerations */}
                   {selectedClauseModal.advice.keyConsiderations?.length > 0 && (
-                    <div className="bg-white border border-gray-200 rounded-xl p-4">
-                      <h4 className="font-semibold text-gray-900 text-sm mb-2 flex items-center gap-2">
-                        <svg className="w-4 h-4 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
-                        Key Considerations
-                      </h4>
-                      <ul className="space-y-1">
+                    <div className="pb-6 border-b border-verdex-100">
+                      <h4 className="text-xs font-medium text-verdex-600 uppercase tracking-wider mb-4">Key Considerations</h4>
+                      <ul className="space-y-3">
                         {selectedClauseModal.advice.keyConsiderations.map((consideration, idx) => (
-                          <li key={idx} className="text-sm text-gray-700 flex items-start gap-2">
-                            <span className="text-verdex-600 mt-1">•</span>
-                            {consideration}
+                          <li key={idx} className="flex items-start gap-3 text-sm text-gray-700">
+                            <span className="text-verdex-300 select-none font-mono text-xs pt-0.5">{String(idx + 1).padStart(2, '0')}</span>
+                            <span className="leading-relaxed">{consideration}</span>
                           </li>
                         ))}
                       </ul>
@@ -1793,59 +1797,59 @@ export default function ResultsPage() {
 
                   {/* Suggested Modifications */}
                   {selectedClauseModal.advice.suggestedModifications && (
-                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-                      <h4 className="font-semibold text-amber-900 text-sm mb-2 flex items-center gap-2">
-                        <svg className="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                        Suggested Modifications for African Context
-                      </h4>
-                      <p className="text-sm text-amber-800">{selectedClauseModal.advice.suggestedModifications}</p>
+                    <div className="pl-4 border-l-2 border-amber-300">
+                      <h4 className="text-xs font-medium text-amber-600 uppercase tracking-wider mb-2">Suggested Modification</h4>
+                      <p className="text-sm text-gray-700 leading-relaxed">{selectedClauseModal.advice.suggestedModifications}</p>
                     </div>
                   )}
                 </div>
-              ) : selectedClauseModal.adviceLoading ? (
-                <div className="mb-6 bg-gray-50 border border-gray-200 rounded-xl p-6 flex items-center justify-center">
-                  <div className="animate-spin w-5 h-5 border-2 border-verdex-600 border-t-transparent rounded-full mr-3" />
-                  <span className="text-gray-600">Analyzing clause relevance for your project...</span>
-                </div>
-              ) : null}
+              )}
 
-              {/* Clause Content */}
-              <div>
-                <h4 className="font-semibold text-gray-900 text-sm mb-2">Original Clause Text</h4>
-                <div className="bg-gray-50 p-4 rounded-xl text-sm text-gray-700 whitespace-pre-wrap border border-gray-100 leading-relaxed max-h-[200px] overflow-auto">
-                  {formatClauseContent(selectedClauseModal.content)}
+              {/* Original Clause Content - Collapsible */}
+              <div className="pt-4 mt-2 border-t border-verdex-100">
+                <button
+                  onClick={() => setOriginalClauseExpanded(!originalClauseExpanded)}
+                  className="flex items-center gap-2 text-verdex-600 hover:text-verdex-600 transition-colors group"
+                >
+                  <svg
+                    className={`w-4 h-4 transition-transform duration-200 ${originalClauseExpanded ? 'rotate-90' : ''}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                  <span className="text-xs font-medium uppercase tracking-wider text-verdex-600">Original Template</span>
+                </button>
+                <div className={`overflow-hidden transition-all duration-200 ${originalClauseExpanded ? 'max-h-[300px] mt-4' : 'max-h-0'}`}>
+                  <div className="pl-4 border-l border-verdex-200">
+                    <p className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed max-h-[200px] overflow-auto">
+                      {formatClauseContent(selectedClauseModal.content)}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Modal Footer */}
-            <div className="p-6 border-t border-gray-100 bg-gray-50/50">
+            <div className="px-6 py-4 border-t border-verdex-100 bg-verdex-50/30 flex items-center justify-between">
               {selectedClauseModal.metadata.source && (
-                <p className="text-sm text-gray-600 mb-4">
-                  <span className="font-medium">Source:</span> {selectedClauseModal.metadata.source}
-                </p>
+                <span className="text-xs text-verdex-600">{selectedClauseModal.metadata.source}</span>
               )}
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(selectedClauseModal.content);
-                  }}
-                  className="flex-1 bg-verdex-600 hover:bg-verdex-700 text-white font-medium py-2.5 px-4 rounded-xl transition-colors flex items-center justify-center gap-2"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                  Copy Clause
-                </button>
+              <div className="flex items-center gap-4 ml-auto">
                 <Link
                   href={`/search?q=${encodeURIComponent(clauseSearchQuery)}`}
-                  className="flex-1 border-2 border-verdex-600 text-verdex-700 hover:bg-verdex-50 font-medium py-2.5 px-4 rounded-xl transition-colors text-center"
+                  className="text-sm text-verdex-600 hover:text-verdex-800 transition-colors"
                   onClick={() => setSelectedClauseModal(null)}
                 >
-                  Search Similar
+                  Search similar
                 </Link>
+                <button
+                  onClick={() => navigator.clipboard.writeText(selectedClauseModal.content)}
+                  className="bg-verdex-600 hover:bg-verdex-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors"
+                >
+                  Copy clause
+                </button>
               </div>
             </div>
           </div>
@@ -1855,54 +1859,49 @@ export default function ResultsPage() {
       {/* Draft Modal */}
       {draftModalOpen && generatedDraft && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
           onClick={() => setDraftModalOpen(false)}
         >
           <div
-            className="bg-white rounded-3xl shadow-2xl max-w-5xl w-full max-h-[95vh] overflow-hidden flex flex-col"
+            className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[95vh] overflow-hidden flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex justify-between items-start p-6 border-b border-gray-100 bg-gradient-to-r from-verdex-50 to-teal-50 flex-shrink-0">
-              <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 bg-gradient-to-br from-verdex-600 to-teal-600 rounded-xl flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="font-display font-medium text-xl text-gray-900">AI-Generated Project Draft</h3>
-                    <p className="text-sm text-gray-600">LMA-Compliant Transition Loan Documentation</p>
-                  </div>
-                </div>
+            <div className="flex justify-between items-center px-6 py-4 border-b border-verdex-100 bg-verdex-50/30 flex-shrink-0">
+              <div className="flex items-center gap-6">
+                <h3 className="font-medium text-verdex-900">Generated Draft</h3>
                 {draftMetadata && (
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    <span className="text-xs bg-verdex-100 text-verdex-800 px-3 py-1 rounded-full font-medium">
-                      Target: {draftMetadata.targetDFI}
-                    </span>
-                    <span className="text-xs bg-teal-100 text-teal-800 px-3 py-1 rounded-full font-medium">
-                      {draftMetadata.sector}
-                    </span>
-                    <span className="text-xs bg-gray-100 text-gray-700 px-3 py-1 rounded-full">
-                      {new Date(draftMetadata.generatedAt).toLocaleString()}
-                    </span>
+                  <div className="flex items-center gap-4 text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="text-verdex-600">Target</span>
+                      <span className="text-verdex-700 font-medium">{draftMetadata.targetDFI}</span>
+                    </div>
+                    <div className="h-4 w-px bg-verdex-200" />
+                    <div className="flex items-center gap-2">
+                      <span className="text-verdex-600">Sector</span>
+                      <span className="text-verdex-700 font-medium capitalize">{draftMetadata.sector}</span>
+                    </div>
+                    <div className="h-4 w-px bg-verdex-200" />
+                    <div className="flex items-center gap-2">
+                      <span className="text-verdex-600">Generated</span>
+                      <span className="text-verdex-700 font-medium">{new Date(draftMetadata.generatedAt).toLocaleDateString()}</span>
+                    </div>
                   </div>
                 )}
               </div>
               <button
                 onClick={() => setDraftModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg"
+                className="text-verdex-600 hover:text-verdex-600 transition-colors"
               >
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
             {/* Modal Content - Scrollable */}
-            <div className="flex-1 overflow-auto p-6">
-              <div className="prose prose-sm max-w-none prose-headings:text-gray-900 prose-h1:text-2xl prose-h1:font-display prose-h1:text-verdex-700 prose-h2:text-xl prose-h2:font-semibold prose-h2:mt-8 prose-h2:mb-4 prose-h3:text-lg prose-h3:font-medium prose-h3:text-verdex-600 prose-p:text-gray-700 prose-li:text-gray-700 prose-strong:text-gray-900 prose-ul:my-2 prose-ol:my-2">
+            <div className="flex-1 overflow-auto px-6 py-4">
+              <div className="max-w-none">
                 {/* Render markdown content with table support */}
                 {(() => {
                   const lines = generatedDraft.split('\n');
@@ -1951,21 +1950,21 @@ export default function ResultsPage() {
                       if (headers.length > 0 && rows.length > 0) {
                         elements.push(
                           <div key={`table-${elements.length}`} className="my-4 overflow-x-auto">
-                            <table className="min-w-full border-collapse border border-gray-200 rounded-lg overflow-hidden">
-                              <thead className="bg-verdex-600">
-                                <tr>
+                            <table className="min-w-full">
+                              <thead>
+                                <tr className="border-b border-verdex-200 bg-verdex-50/50">
                                   {headers.map((h, hi) => (
-                                    <th key={hi} className="px-4 py-2 text-left text-sm font-semibold text-white border-b border-verdex-500">
+                                    <th key={hi} className="px-3 py-2 text-left text-xs font-medium text-verdex-600 uppercase tracking-wider">
                                       {h}
                                     </th>
                                   ))}
                                 </tr>
                               </thead>
-                              <tbody>
+                              <tbody className="divide-y divide-verdex-50">
                                 {rows.map((row, ri) => (
-                                  <tr key={ri} className={ri % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                  <tr key={ri}>
                                     {row.map((cell, ci) => (
-                                      <td key={ci} className="px-4 py-2 text-sm text-gray-700 border-b border-gray-200">
+                                      <td key={ci} className="px-3 py-2 text-sm text-gray-700">
                                         {cell}
                                       </td>
                                     ))}
@@ -1984,44 +1983,50 @@ export default function ResultsPage() {
                       elements.push(<div key={`line-${i}`} className="h-2" />);
                     } else if (trimmed.startsWith('### ')) {
                       elements.push(
-                        <h3 key={`line-${i}`} className="text-lg font-medium text-verdex-600 mt-6 mb-3">
+                        <h3 key={`line-${i}`} className="text-md font-medium text-verdex-600 uppercase tracking-wider mt-5 mb-2">
                           {trimmed.replace('### ', '').replace(/\*\*/g, '')}
                         </h3>
                       );
                     } else if (trimmed.startsWith('## ')) {
                       elements.push(
-                        <h2 key={`line-${i}`} className="text-xl font-semibold text-gray-900 mt-8 mb-4 pb-2 border-b border-gray-200">
+                        <h2 key={`line-${i}`} className="text-sm font-semibold text-verdex-800 mt-6 mb-2 pb-2 border-b border-verdex-100">
                           {trimmed.replace('## ', '').replace(/\*\*/g, '')}
                         </h2>
                       );
                     } else if (trimmed.startsWith('# ')) {
                       elements.push(
-                        <h1 key={`line-${i}`} className="text-2xl font-display font-medium text-verdex-700 mt-6 mb-4">
+                        <h1 key={`line-${i}`} className="text-base font-medium text-verdex-900 mb-1">
                           {trimmed.replace('# ', '').replace(/\*\*/g, '')}
                         </h1>
                       );
                     } else if (trimmed.startsWith('---')) {
-                      elements.push(<hr key={`line-${i}`} className="my-6 border-gray-200" />);
+                      elements.push(<hr key={`line-${i}`} className="my-5 border-verdex-100" />);
                     } else if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
                       const content = trimmed.substring(2);
                       elements.push(
-                        <div key={`line-${i}`} className="flex items-start gap-2 ml-4 my-1">
-                          <span className="text-verdex-500 mt-1">•</span>
-                          <span className="text-gray-700" dangerouslySetInnerHTML={{
-                            __html: content.replace(/\*\*([^*]+)\*\*/g, '<strong class="text-gray-900">$1</strong>')
+                        <div key={`line-${i}`} className="flex items-start gap-2 my-1">
+                          <span className="text-verdex-300 select-none">—</span>
+                          <span className="text-sm text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{
+                            __html: content.replace(/\*\*([^*]+)\*\*/g, '<strong class="font-medium text-verdex-900">$1</strong>')
                           }} />
                         </div>
                       );
                     } else if (/^\d+\.\s/.test(trimmed)) {
-                      elements.push(
-                        <p key={`line-${i}`} className="ml-4 my-1 text-gray-700" dangerouslySetInnerHTML={{
-                          __html: trimmed.replace(/\*\*([^*]+)\*\*/g, '<strong class="text-gray-900">$1</strong>')
-                        }} />
-                      );
+                      const match = trimmed.match(/^(\d+)\.\s(.*)$/);
+                      if (match) {
+                        elements.push(
+                          <div key={`line-${i}`} className="flex items-start gap-2 my-1">
+                            <span className="text-verdex-300 select-none font-mono text-xs pt-0.5">{match[1].padStart(2, '0')}</span>
+                            <span className="text-sm text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{
+                              __html: match[2].replace(/\*\*([^*]+)\*\*/g, '<strong class="font-medium text-verdex-900">$1</strong>')
+                            }} />
+                          </div>
+                        );
+                      }
                     } else {
                       elements.push(
-                        <p key={`line-${i}`} className="text-gray-700 my-2" dangerouslySetInnerHTML={{
-                          __html: trimmed.replace(/\*\*([^*]+)\*\*/g, '<strong class="text-gray-900">$1</strong>')
+                        <p key={`line-${i}`} className="text-sm text-gray-700 leading-relaxed my-1" dangerouslySetInnerHTML={{
+                          __html: trimmed.replace(/\*\*([^*]+)\*\*/g, '<strong class="font-medium text-verdex-900">$1</strong>')
                         }} />
                       );
                     }
@@ -2034,39 +2039,26 @@ export default function ResultsPage() {
             </div>
 
             {/* Modal Footer */}
-            <div className="p-6 border-t border-gray-100 bg-gray-50/80 flex-shrink-0">
-              <div className="flex flex-col sm:flex-row gap-3">
-                <button
-                  onClick={exportDraftToPDF}
-                  className="flex-1 bg-gradient-to-r from-verdex-600 to-teal-600 hover:from-verdex-700 hover:to-teal-700 text-white font-medium py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
-                >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  Export Draft as PDF
-                </button>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(generatedDraft);
-                    alert('Draft copied to clipboard!');
-                  }}
-                  className="flex-1 border-2 border-verdex-600 text-verdex-700 hover:bg-verdex-50 font-medium py-3 px-4 rounded-xl transition-colors flex items-center justify-center gap-2"
-                >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                  Copy to Clipboard
-                </button>
-                <button
-                  onClick={() => setDraftModalOpen(false)}
-                  className="sm:w-auto px-6 py-3 text-gray-600 hover:text-gray-900 font-medium rounded-xl hover:bg-gray-100 transition-colors"
-                >
-                  Close
-                </button>
+            <div className="px-6 py-4 border-t border-verdex-100 bg-verdex-50/30 flex-shrink-0">
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-verdex-700">Review with legal counsel before use</p>
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(generatedDraft);
+                    }}
+                    className="text-sm text-verdex-600 hover:text-verdex-800 transition-colors"
+                  >
+                    Copy
+                  </button>
+                  <button
+                    onClick={exportDraftToPDF}
+                    className="bg-verdex-600 hover:bg-verdex-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors"
+                  >
+                    Export PDF
+                  </button>
+                </div>
               </div>
-              <p className="text-xs text-gray-500 text-center mt-4">
-                This AI-generated draft is based on LMA Transition Loan Principles. Please review with legal counsel before use.
-              </p>
             </div>
           </div>
         </div>

@@ -88,10 +88,13 @@ interface DraftRequest {
       source?: string;
     };
     advice?: {
+      relevanceScore?: number;
       relevanceSummary: string;
       howToApply: string;
+      whenToUse?: string;
       keyConsiderations: string[];
       suggestedModifications?: string;
+      contextualizedExample?: string; // AI-generated adjusted clause for this project
     };
   }[];
   nextSteps: string[];
@@ -179,6 +182,9 @@ interface PreparedData {
     source: string;
     content: string;
     howToApply: string;
+    contextualizedExample?: string; // AI-generated adjusted clause text
+    relevanceScore?: number;
+    keyConsiderations?: string[];
   }[];
   // Country info
   countryInfo: DraftRequest['countryInfo'];
@@ -205,6 +211,78 @@ interface PreparedData {
     annual: string;
     methodology: string[];
   };
+}
+
+// ============================================================================
+// PROGRAMMATIC CLAUSE SECTION BUILDER
+// Builds the adapted clauses section without AI - 100% reliable insertion
+// ============================================================================
+function buildAdaptedClausesSection(clauses: PreparedData['clauses'], projectName: string): string {
+  if (!clauses || clauses.length === 0) {
+    return '';
+  }
+
+  // Group clauses by type for better organization
+  const clauseGroups: Record<string, typeof clauses> = {
+    'Margin & Interest': [],
+    'KPI & Performance': [],
+    'Verification & Reporting': [],
+    'Use of Proceeds': [],
+    'Other Terms': [],
+  };
+
+  clauses.forEach(clause => {
+    const type = clause.type.toLowerCase();
+    if (type.includes('margin') || type.includes('interest') || type.includes('ratchet')) {
+      clauseGroups['Margin & Interest'].push(clause);
+    } else if (type.includes('kpi') || type.includes('spt') || type.includes('performance') || type.includes('target')) {
+      clauseGroups['KPI & Performance'].push(clause);
+    } else if (type.includes('verification') || type.includes('reporting') || type.includes('covenant')) {
+      clauseGroups['Verification & Reporting'].push(clause);
+    } else if (type.includes('proceeds') || type.includes('use of')) {
+      clauseGroups['Use of Proceeds'].push(clause);
+    } else {
+      clauseGroups['Other Terms'].push(clause);
+    }
+  });
+
+  let section = `
+
+---
+
+## ANNEX A: ADAPTED LMA CLAUSES
+
+*The following clauses have been adapted from standard LMA templates specifically for ${projectName}. These AI-generated clause texts are ready for review and incorporation into the loan agreement.*
+
+`;
+
+  Object.entries(clauseGroups).forEach(([groupName, groupClauses]) => {
+    if (groupClauses.length === 0) return;
+
+    section += `### ${groupName}\n\n`;
+
+    groupClauses.forEach((clause, index) => {
+      section += `**${index + 1}. ${clause.type.charAt(0).toUpperCase() + clause.type.slice(1)}**\n`;
+      section += `*Source: ${clause.source}*\n\n`;
+
+      if (clause.contextualizedExample) {
+        section += `${clause.contextualizedExample}\n\n`;
+      } else {
+        section += `*[Standard ${clause.type} clause to be adapted]*\n\n`;
+      }
+
+      if (clause.howToApply) {
+        section += `> **Application Note:** ${clause.howToApply}\n\n`;
+      }
+    });
+  });
+
+  section += `---
+
+*End of Adapted Clauses Annex*
+`;
+
+  return section;
 }
 
 async function callGroqAPI(
@@ -360,7 +438,7 @@ async function retrieveLMAGuideContext(
 // ============================================================================
 // PHASE 1: ANALYZE - Extract structured requirements
 // ============================================================================
-async function phase1Analyze(data: PreparedData, lmaGuideContext?: LMAGuideContext): Promise<{
+async function phase1Analyze(data: PreparedData): Promise<{
   success: boolean;
   plan?: {
     keywordsRequired: Record<string, string[]>;
@@ -371,67 +449,16 @@ async function phase1Analyze(data: PreparedData, lmaGuideContext?: LMAGuideConte
   };
   error?: string;
 }> {
-  // Include LMA Guide context if available
-  const lmaContext = lmaGuideContext?.content
-    ? `\n\nLMA GUIDE TO TRANSITION LOANS REFERENCE:\n${lmaGuideContext.content}\n\nUse the above LMA guidance to inform your analysis and ensure compliance.`
-    : '';
+  const systemPrompt = `Output valid JSON only. Structure:
+{"keywordsRequired":{"projectDescription":["SBTi","Paris Agreement"],"transitionStrategy":["1.5°C","Scope 3"]},"greenwashingFixes":["fix1","fix2"]}`;
 
-  const systemPrompt = `You are an LMA compliance analyst specializing in transition loans. Analyze the assessment results and output a JSON plan.
-${lmaContext}
-
-CRITICAL RULES:
-- Output ONLY valid JSON, no markdown or explanation
-- All years must be >= ${CURRENT_YEAR} (current year)
-- Current quarter is Q${CURRENT_QUARTER} ${CURRENT_YEAR}. Do NOT plan for Q1-Q${CURRENT_QUARTER - 1} of ${CURRENT_YEAR} - those quarters are in the past!
-- For ${CURRENT_YEAR}, only use Q${CURRENT_QUARTER} or later. For future years, any quarter is acceptable.
-- Never suggest past dates like 2023 or 2024
-- Follow LMA Guide to Transition Loans requirements for credible transition plans
-
-Output this exact JSON structure:
-{
-  "keywordsRequired": {
-    "projectDescription": ["list of keywords that MUST appear in Project Description section"],
-    "transitionStrategy": ["list of keywords that MUST appear in Transition Strategy section"]
-  },
-  "dataToInclude": ["list of specific data points with exact numbers"],
-  "itemsToFix": ["list of failed items that need corrective language"],
-  "itemsToPreserve": ["list of passing items - DO NOT change language that achieved these"],
-  "greenwashingFixes": ["list of specific changes to avoid greenwashing"]
-}`;
-
-  const userPrompt = `Analyze this assessment and create a compliance plan:
-
-PROJECT: ${data.projectName} (${data.countryName}, ${data.sector})
-SCORE: ${data.overallScore}/100
-
-FAILED ITEMS (must fix):
-${data.failedItems.map(f => `- ${f.component}: ${f.issue}`).join('\n')}
-
-PASSING ITEMS (must preserve):
-${data.passingItems.join('\n')}
-
-RED FLAGS (greenwashing):
-${data.redFlags.map(r => `- ${r.description}: ${r.recommendation}`).join('\n')}
-
-POSITIVE INDICATORS (reinforce):
-${data.positiveIndicators.join('\n')}
-
-EXACT DATA TO USE:
-- Scope 1: ${data.scope1Baseline} → ${data.scope1Target} tCO2e/year
-- Scope 2: ${data.scope2Baseline} → ${data.scope2Target} tCO2e/year
-- Scope 3: ${data.scope3Baseline} → ${data.scope3Target} tCO2e/year
-- Total: ${data.totalBaseline} → ${data.totalTarget} tCO2e (${data.reductionPercent}% reduction)
-- Budget: USD ${data.totalCost.toLocaleString()}
-- Debt: USD ${data.debtAmount.toLocaleString()} (${data.debtPercent}%)
-- Equity: USD ${data.equityAmount.toLocaleString()} (${data.equityPercent}%)
-
-DATE CONSTRAINT: All dates must be ${CURRENT_YEAR} or later. Target year: ${data.targetYear}
-QUARTER CONSTRAINT: Current quarter is Q${CURRENT_QUARTER} ${CURRENT_YEAR}. For current year, only Q${CURRENT_QUARTER}-Q4 are valid. Past quarters (Q1-Q${CURRENT_QUARTER - 1} of ${CURRENT_YEAR}) cannot be used.
-
-Create JSON plan with keywords for Project Description and Transition Strategy sections.`;
+  const userPrompt = `Analyze: ${data.projectName} (${data.countryName}, ${data.sector})
+Failed: ${data.failedItems.slice(0, 3).map(f => f.issue).join('; ') || 'None'}
+Red flags: ${data.redFlags.slice(0, 3).map(r => r.description).join('; ') || 'None'}
+Output JSON with keywordsRequired and greenwashingFixes.`;
 
   console.log('[Phase 1: ANALYZE] Starting...');
-  const result = await callWithFallback(systemPrompt, userPrompt, 1500, 0.2);
+  const result = await callWithFallback(systemPrompt, userPrompt, 500, 0.2); // Small JSON output
 
   if (!result.success) {
     return { success: false, error: result.error };
@@ -478,151 +505,39 @@ async function phase2GenerateSections1to5(
   plan: NonNullable<Awaited<ReturnType<typeof phase1Analyze>>['plan']>,
   lmaGuideContext?: LMAGuideContext
 ): Promise<{ success: boolean; content?: string; error?: string }> {
-  // Include LMA Guide context if available
   const lmaContext = lmaGuideContext?.content
-    ? `\n\nLMA GUIDE TO TRANSITION LOANS REFERENCE:\n${lmaGuideContext.content}\n\nAPPLY this official LMA guidance when writing sections. Reference specific requirements.`
+    ? `\nLMA GUIDE REFERENCE:\n${lmaGuideContext.content.substring(0, 1500)}\n`
     : '';
 
-  const systemPrompt = `You are an LMA transition loan document writer. Generate sections 1-5 of a professional draft.
+  // Safely extract keywords with defaults
+  const projKeywords = plan?.keywordsRequired?.projectDescription?.join(', ') || 'SBTi, Science Based Targets, Paris Agreement, NDC';
+  const transKeywords = plan?.keywordsRequired?.transitionStrategy?.join(', ') || '1.5°C pathway, science-based targets, Scope 3';
+
+  const systemPrompt = `You are an LMA transition loan document writer. Generate sections 1-5.
 ${lmaContext}
+RULES: Use specific numbers (no TBD/TBC). Include SBTi, Paris Agreement, NDC, 1.5°C, Scope 1/2/3. Years must be ${CURRENT_YEAR}+. Be factual, no superlatives.
 
-ABSOLUTE RULES - COMPLIANCE:
-1. ALL years must be ${CURRENT_YEAR} or later. NEVER use ${CURRENT_YEAR - 1}, ${CURRENT_YEAR - 2}, or earlier years.
-2. Current quarter is Q${CURRENT_QUARTER} ${CURRENT_YEAR}. For ${CURRENT_YEAR}, only use Q${CURRENT_QUARTER}, Q${Math.min(CURRENT_QUARTER + 1, 4)}, Q${Math.min(CURRENT_QUARTER + 2, 4)}, Q4. NEVER use past quarters (Q1-Q${CURRENT_QUARTER - 1} of ${CURRENT_YEAR}).
-3. Use "95%" not "100%" for any percentage targets
-4. Be factual and measured - avoid superlatives
+KEYWORDS: Project Description: ${projKeywords}
+Transition Strategy: ${transKeywords}`;
 
-ANTI-GREENWASHING RULES - CRITICAL:
-**BANNED WORDS/PHRASES (will trigger red flags):**
-- NEVER use: "various", "to be determined", "TBD", "TBC", "to be confirmed"
-- NEVER use: "99%", "100%", "guaranteed", "no risk", "zero cost", "500%", "unlimited"
-- NEVER use vague commitments: "aspire to", "intend to", "aim to", "explore", "consider", "may" (without specific year)
-- NEVER use: "revolutionary", "unprecedented", "transformative", "world-leading", "best-in-class", "first-of-its-kind"
+  const userPrompt = `Generate sections 1-5 for: **${data.projectName}** (${data.countryName}, ${data.sector})
 
-**REQUIRED ELEMENTS (must include to pass LMA assessment):**
-- Project description MUST be detailed (>200 words) with SPECIFIC activities and outcomes
-- MUST include: "SBTi", "Science Based Targets", "Paris Agreement", "NDC", "1.5°C pathway"
-- MUST include specific target years (2030, 2035, 2050)
-- MUST include Scope 1, Scope 2, AND Scope 3 emissions with actual numbers
-- MUST reference "published transition strategy" or "board-approved transition plan"
-- MUST mention "third-party verification" or "independent verification"
-- MUST use specific percentages (e.g., "42% reduction by 2030") not vague terms
+DATA:
+- Budget: USD ${data.totalCost.toLocaleString()} (Debt: ${data.debtPercent}%, Equity: ${data.equityPercent}%)
+- Emissions: Scope1=${data.scope1Baseline}→${data.scope1Target}, Scope2=${data.scope2Baseline}→${data.scope2Target}, Scope3=${data.scope3Baseline}→${data.scope3Target} tCO2e/year
+- Reduction: ${data.reductionPercent}% by ${data.targetYear}
+- DFI: ${data.primaryDFI?.name || 'General'}
 
-**INSTEAD OF VAGUE LANGUAGE, USE:**
-- "Various activities" → List specific activities: "solar panel installation, energy efficiency upgrades, and waste heat recovery"
-- "TBD" → Use actual number or "to be verified by Q${CURRENT_QUARTER} ${CURRENT_YEAR}"
-- "Aspire to reduce" → "Will reduce by X% by [year], verified by [verifier]"
-- "May achieve" → "Target: X% reduction, with interim milestones in [years]"
+CONTEXT: ${data.description || 'Transition project'} ${data.transitionStrategy || ''}
 
-KEYWORDS TO INCLUDE:
-- In Project Description: ${plan.keywordsRequired.projectDescription?.join(', ') || 'SBTi, Science Based Targets, Paris Agreement, NDC'}
-- In Transition Strategy: ${plan.keywordsRequired.transitionStrategy?.join(', ') || '1.5°C pathway, science-based targets, Scope 3'}
+SECTIONS:
+1. EXECUTIVE SUMMARY - Key metrics table, budget, SBTi/Paris alignment
+2. PROJECT DESCRIPTION (>200 words) - Activities, timeline (Q${CURRENT_QUARTER} ${CURRENT_YEAR}+), outcomes. Include: SBTi, Science Based Targets, Paris Agreement, NDC
+3. TRANSITION STRATEGY - Emissions table (all 3 scopes), roadmap. Include: 1.5°C pathway, third-party verification
+4. FINANCING STRUCTURE - Debt/equity table, cost breakdown, DFI strategy
+5. USE OF PROCEEDS & ELIGIBILITY - Categories with % allocation, eligibility criteria, key terms (margin ratchet, TPT definitions, reporting covenants)
 
-ITEMS TO PRESERVE (do not change language):
-${plan.itemsToPreserve?.join('\n') || 'None'}
-
-Output: Clean markdown for sections 1-5 only.`;
-
-  const userPrompt = `Generate sections 1-5 for: ${data.projectName}
-
-## EXACT DATA TO USE (do not change these numbers):
-| Metric | Value |
-|--------|-------|
-| Total Budget | USD ${data.totalCost.toLocaleString()} |
-| Debt | USD ${data.debtAmount.toLocaleString()} (${data.debtPercent}%) |
-| Equity | USD ${data.equityAmount.toLocaleString()} (${data.equityPercent}%) |
-| Scope 1 Baseline | ${data.scope1Baseline} tCO2e/year |
-| Scope 2 Baseline | ${data.scope2Baseline} tCO2e/year |
-| Scope 3 Baseline | ${data.scope3Baseline} tCO2e/year |
-| Scope 1 Target | ${data.scope1Target} tCO2e/year |
-| Scope 2 Target | ${data.scope2Target} tCO2e/year |
-| Scope 3 Target | ${data.scope3Target} tCO2e/year |
-| Total Reduction | ${data.reductionPercent}% |
-| Target Year | ${data.targetYear} |
-| Country | ${data.countryName} |
-| Sector | ${data.sector} |
-
-## PROJECT CONTEXT:
-${data.description || 'Agricultural processing facility with solar drying systems'}
-${data.transitionStrategy || ''}
-
-## DFI TARGET:
-${data.primaryDFI ? `${data.primaryDFI.fullName} - ${data.primaryDFI.recommendedRole}` : 'General DFI engagement'}
-
-## GENERATE THESE 5 SECTIONS:
-
-### 1. EXECUTIVE SUMMARY
-- Project overview with key metrics table
-- Include total budget prominently
-- State SBTi and Paris alignment
-- Keep factual, avoid exaggeration
-
-### 2. PROJECT DESCRIPTION
-**MUST include these keywords:** SBTi, Science Based Targets, Paris Agreement, NDC
-- Detailed description of project activities
-- Timeline table (all dates ${CURRENT_YEAR}+, starting from Q${CURRENT_QUARTER} ${CURRENT_YEAR} at earliest)
-- Environmental outcomes expected
-
-### 3. TRANSITION STRATEGY
-**MUST include these keywords:** 1.5°C pathway, science-based targets, Scope 3
-- Full emissions table with Scope 1, 2, AND 3
-- Decarbonization roadmap
-- Alignment statement: "aligned with the Paris Agreement 1.5°C pathway"
-
-### 4. FINANCING STRUCTURE
-- Financing table with debt/equity split
-- Cost breakdown
-- DFI engagement strategy
-
-### 5. USE OF PROCEEDS & TRANSITION ELIGIBILITY
-
-**Per LMA Guide to Transition Loans (October 2025)**
-
-**5.1 Eligible Transition Activities**
-Define specific use of proceeds categories:
-- Category 1: [Primary transition activity] - [X]% allocation
-- Category 2: [Secondary activity] - [X]% allocation
-- Category 3: [Supporting activity] - [X]% allocation
-
-**5.2 Eligibility Criteria**
-For each category, specify:
-- Alignment with transition pathway
-- Environmental benefit expected
-- Exclusion criteria (what funds CANNOT be used for)
-
-**5.3 Key Terms and Conditions**
-
-**CRITICAL FORMATTING:**
-- Each clause/term MUST be a bullet point (•)
-- Key terms/keywords within each clause MUST be **bolded**
-- Structure each bullet as: "**Key Term Name**: Description..."
-- Reference LMA Guide to Transition Loans where applicable
-
-Include these elements:
-- **Standard LMA Terms**: repayment schedules, interest rates, default provisions
-- **Margin Ratchet Mechanism**: tied to TPT (Transition Performance Target) achievement
-- **Reporting Covenant**: annual transition progress reporting requirements
-- **TPT Definitions**: specific transition metrics and measurement methods
-- **Proceeds Tracking**: ring-fencing and allocation reporting
-
-${data.clauses.length > 0 ? `
-## RELEVANT LMA CLAUSES TO ADAPT (from assessment):
-${data.clauses.map((c, i) => `
-**${i + 1}. ${c.type}** (Source: ${c.source})
-Clause ID: ${c.id}
-How to Apply: ${c.howToApply}
-`).join('\n')}
-
-For Section 5:
-- Adapt each relevant clause above for this specific project
-- Format as bullet points (•) with **bolded** key terms
-- Include margin ratchet tied to the project's TPTs (Transition Performance Targets)
-- Reference "per LMA Guide to Transition Loans" where applicable
-
-Example format:
-• **Margin Ratchet Mechanism**: A reduction in the interest margin will be triggered by achieving specific TPT targets, as verified by third-party reports. The **margin reduction** will be 5-15 basis points per year for each TPT met.
-• **Transition Reporting Covenant**: The borrower will prepare an annual **Transition Progress Report**, verifying performance against TPTs and use of proceeds allocation. Reports will be verified by a qualified third party, per **LMA Guide to Transition Loans**.
-` : ''}`;
+Output clean markdown.`;
 
   console.log('[Phase 2A: GENERATE 1-5] Starting...');
   const result = await callWithFallback(systemPrompt, userPrompt, 4000, 0.35);
@@ -638,213 +553,81 @@ async function phase2GenerateSections6to10(
   plan: NonNullable<Awaited<ReturnType<typeof phase1Analyze>>['plan']>,
   lmaGuideContext?: LMAGuideContext
 ): Promise<{ success: boolean; content?: string; error?: string }> {
-  // Include LMA Guide context if available - particularly important for sections 6-10
   const lmaContext = lmaGuideContext?.content
-    ? `\n\nLMA GUIDE TO TRANSITION LOANS - OFFICIAL REFERENCE:\n${lmaGuideContext.content}\n\nCRITICAL: Apply this official LMA guidance throughout. Sections 6 (Credible Transition Plan), 8 (TPT Mechanism), and 9 (External Review) must follow LMA requirements precisely.`
+    ? `\nLMA GUIDE REFERENCE:\n${lmaGuideContext.content.substring(0, 1500)}\n`
     : '';
 
-  const systemPrompt = `You are an LMA transition loan document writer following the LMA Guide to Transition Loans (October 2025). Generate sections 6-10 of a professional transition loan draft.
+  // Safely extract greenwashing fixes with default
+  const gwFixes = plan?.greenwashingFixes?.slice(0, 3).join('; ') || 'Use specific numbers, avoid vague language';
+
+  const systemPrompt = `You are an LMA transition loan document writer. Generate sections 6-10.
 ${lmaContext}
+RULES: Use specific numbers (no TBD). Years must be ${CURRENT_YEAR}+. Use TPTs (not SPTs). Include third-party verification, SPO. Be factual.
 
-TRANSITION LOAN REQUIREMENTS (per LMA Guide to Transition Loans):
-- This is a TRANSITION loan, not a green loan or SLL
-- Must include a CREDIBLE TRANSITION PLAN with short/medium/long-term targets
-- Use TPTs (Transition Performance Targets), not SPTs
-- Reference sector-specific benchmarks (SBTi, ACT, TPI)
-- Include governance framework for transition oversight
-- Include external review requirements (SPO + annual verification)
+GREENWASHING FIXES: ${gwFixes}`;
 
-ABSOLUTE RULES - COMPLIANCE:
-1. ALL years must be ${CURRENT_YEAR} or later. NEVER use ${CURRENT_YEAR - 1}, ${CURRENT_YEAR - 2}, or earlier.
-2. Current quarter is Q${CURRENT_QUARTER} ${CURRENT_YEAR}. For ${CURRENT_YEAR}, only use Q${CURRENT_QUARTER}-Q4. NEVER use past quarters (Q1-Q${CURRENT_QUARTER - 1} of ${CURRENT_YEAR}).
-3. Use "95%" not "100%" for percentage targets
-4. Be factual - avoid superlatives
-5. All KPI baselines must have actual numbers, not placeholders
-6. Reference "LMA Guide to Transition Loans" in appropriate sections
+  // Build compact data tables
+  const kpiData = data.kpis?.slice(0, 4).map(k => `${k.name}:${k.suggestedTarget}`).join(', ') || 'GHG:45% reduction';
+  const tptData = data.tpts?.slice(0, 3).map(t => `${t.name}:${t.baseline}→${t.target}(${t.marginImpact})`).join(', ') || 'Emissions:±5-15bps';
+  const transitionTargets = [
+    ...data.transitionPlan.shortTermTargets.map(t => `Short(${t.year}):${t.target}`),
+    ...data.transitionPlan.mediumTermTargets.map(t => `Mid(${t.year}):${t.target}`),
+    ...data.transitionPlan.longTermTargets.map(t => `Long(${t.year}):${t.target}`)
+  ].join(', ');
 
-ANTI-GREENWASHING RULES - CRITICAL:
-**BANNED WORDS/PHRASES (will trigger red flags):**
-- NEVER use: "various", "to be determined", "TBD", "TBC", "to be confirmed", "to be established"
-- NEVER use: "99%", "100%", "guaranteed", "no risk", "zero cost", "500%", "unlimited"
-- NEVER use vague commitments: "aspire to", "intend to", "aim to", "explore", "consider", "may" (without specific year)
-- NEVER use: "revolutionary", "unprecedented", "transformative", "world-leading", "best-in-class"
+  const userPrompt = `Generate sections 6-10 for: **${data.projectName}** (${data.countryName}, ${data.sector})
 
-**REQUIRED ELEMENTS FOR LMA COMPLIANCE:**
-- Section 6: MUST include specific short/medium/long-term targets with YEARS and PERCENTAGES
-- Section 7: KPIs MUST have actual baseline numbers (e.g., "12,500 tCO2e/year"), not placeholders
-- Section 8: TPTs MUST reference SBTi 1.5°C pathway with specific reduction targets
-- Section 9: MUST include "third-party verification", "independent verifier", specific verifier names (DNV, KPMG, EY)
-- Section 9: MUST mention "Second Party Opinion (SPO)" from recognized provider
-- Section 10: MUST include specific timeline starting from Q${CURRENT_QUARTER} ${CURRENT_YEAR}
+DATA:
+- Target Year: ${data.targetYear}, DFI: ${data.primaryDFI?.name || 'General'}
+- Pathway: ${data.transitionPlan.sectorPathway}
+- Transition Targets: ${transitionTargets}
+- KPIs: ${kpiData}
+- TPTs: ${tptData}
+- Review: Pre-signing=${data.externalReview.preSigning}, Annual=${data.externalReview.annual}
+- Governance: Board=${data.governanceFramework.boardOversight}, Committee=${data.governanceFramework.climateCommittee}
 
-**INSTEAD OF VAGUE LANGUAGE, USE:**
-- "To be established" → "Established by Q${CURRENT_QUARTER} ${CURRENT_YEAR}" or use actual value
-- "To be determined" → Use specific number from project data
-- "Various measures" → List 3-5 specific measures with expected outcomes
+RED FLAGS TO ADDRESS: ${data.redFlags.length > 0 ? data.redFlags.map(r => r.description).join('; ') : 'None'}
 
-GREENWASHING FIXES TO APPLY (CRITICAL):
-${plan.greenwashingFixes?.join('\n') || 'None'}
+GENERATE DETAILED SECTIONS:
 
-IMPORTANT: Section 9 (Risk Mitigation & External Review) MUST provide concrete, actionable solutions for EVERY red flag.
-Do NOT just list the issues - provide SPECIFIC mitigation strategies with timelines.
+### 6. CREDIBLE TRANSITION PLAN (Per LMA Guide - MANDATORY)
+**6.1 Decarbonization Pathway** - Table with columns: Timeframe | Year Range | Target | Key Actions
+- Short-term (${CURRENT_YEAR}-${CURRENT_YEAR + 2}): 15-25% reduction, immediate measures
+- Medium-term (${CURRENT_YEAR + 3}-2035): 40-50% reduction (SBTi 1.5°C aligned)
+- Long-term (2036-${data.targetYear}): Net zero / 90%+ reduction
 
-Output: Clean markdown for sections 6-10 only.`;
-
-  const kpiTable = data.kpis?.map(kpi =>
-    `| ${kpi.name} | ${kpi.unit} | ${kpi.suggestedTarget} |`
-  ).join('\n') || '| GHG Emissions | tCO2e/year | 45% reduction |';
-
-  // TPT (Transition Performance Targets) table - renamed from SPT for transition loans
-  const tptTable = data.tpts?.map(tpt =>
-    `| ${tpt.name} | ${tpt.baseline} | ${tpt.target} | ${tpt.marginImpact} |`
-  ).join('\n') || '| Emissions Reduction | Baseline | Target | ±5-15 bps |';
-
-  // Transition plan data for Section 6
-  const transitionPlanTable = `
-| Timeframe | Target | Key Actions |
-|-----------|--------|-------------|
-${data.transitionPlan.shortTermTargets.map(t => `| Short-term (${t.year}) | ${t.target} | Immediate measures |`).join('\n')}
-${data.transitionPlan.mediumTermTargets.map(t => `| Medium-term (${t.year}) | ${t.target} | Technology transition |`).join('\n')}
-${data.transitionPlan.longTermTargets.map(t => `| Long-term (${t.year}) | ${t.target} | Full decarbonization |`).join('\n')}
-`;
-
-  // Use of proceeds table
-  const useOfProceedsTable = data.useOfProceedsCategories.map(c =>
-    `| ${c.category} | ${c.allocation}% | ${c.eligibilityCriteria} |`
-  ).join('\n');
-
-  const userPrompt = `Generate sections 6-10 for: ${data.projectName}
-
-## PROJECT DATA:
-- Country: ${data.countryName}
-- Sector: ${data.sector}
-- Target Year: ${data.targetYear}
-- Primary DFI: ${data.primaryDFI?.name || 'General'}
-- Sector Pathway: ${data.transitionPlan.sectorPathway}
-- Taxonomy Alignment: ${data.transitionPlan.taxonomyAlignment.join(', ')}
-
-## TRANSITION PLAN DATA (for Section 6):
-${transitionPlanTable}
-
-## GOVERNANCE FRAMEWORK:
-- Board Oversight: ${data.governanceFramework.boardOversight ? 'Yes' : 'To be established'}
-- Climate Committee: ${data.governanceFramework.climateCommittee ? 'Yes' : 'To be established'}
-- Executive Incentives: ${data.governanceFramework.executiveIncentives ? 'Yes' : 'To be established'}
-
-## USE OF PROCEEDS CATEGORIES:
-| Category | Allocation | Eligibility Criteria |
-|----------|------------|---------------------|
-${useOfProceedsTable}
-
-## KPI DATA (for Section 7):
-| KPI | Unit | Target |
-|-----|------|--------|
-${kpiTable}
-
-## TPT DATA (for Section 8 - Transition Performance Targets):
-| TPT | Baseline | Target | Margin Impact |
-|-----|----------|--------|---------------|
-${tptTable}
-
-## EXTERNAL REVIEW REQUIREMENTS (for Section 9):
-- Pre-Signing: ${data.externalReview.preSigning}
-- Annual Verification: ${data.externalReview.annual}
-- Methodology: ${data.externalReview.methodology.join(', ')}
-
-## RED FLAGS TO MITIGATE (CRITICAL - MUST ADDRESS EACH ONE):
-${data.redFlags.length > 0 ? data.redFlags.map(r => `- **${r.description}**\n  Recommendation: ${r.recommendation}`).join('\n') : 'None identified'}
-
-## GENERATE THESE 5 SECTIONS:
-
-### 6. CREDIBLE TRANSITION PLAN
-
-**Per LMA Guide to Transition Loans (October 2025) - MANDATORY SECTION**
-
-**6.1 Decarbonization Pathway**
-| Timeframe | Year Range | Target | Key Actions |
-|-----------|-----------|--------|-------------|
-| Short-term | ${CURRENT_YEAR}-${CURRENT_YEAR + 2} | [15-20% reduction] | Immediate efficiency measures |
-| Medium-term | ${CURRENT_YEAR + 3}-2035 | [40-50% reduction] | Technology transition, renewable deployment |
-| Long-term | 2036-${data.targetYear > 2040 ? data.targetYear : 2050} | [Net zero/80%+ reduction] | Full decarbonization |
-
-**6.2 Sector Pathway Alignment**
-- Benchmark: [SBTi 1.5°C sector pathway / ACT methodology / TPI benchmark]
-- Methodology: Science Based Targets initiative
-- Alignment statement: "This transition plan is aligned with [pathway]"
-
-**6.3 Governance Framework**
-- Board-level climate oversight: [Yes/To be established by Q_ ${CURRENT_YEAR}]
-- Climate/Sustainability Committee: [Yes/To be established]
-- Executive incentives linked to transition targets: [Yes/To be established]
-- Disclosure commitments: [TCFD / CDP / Other]
-
-**6.4 Just Transition Considerations** (if applicable)
-- Workforce transition plans
-- Community impact mitigation
-- Stakeholder engagement
+**6.2 Sector Pathway Alignment** - Benchmark (SBTi/ACT/TPI), methodology, alignment statement
+**6.3 Governance Framework** - Board oversight, climate committee, executive incentives, TCFD/CDP disclosure
+**6.4 Just Transition** - Workforce reskilling plans, community impact mitigation, stakeholder engagement
 
 ### 7. KPI FRAMEWORK
-- Detailed KPI table with baselines (use real numbers, not "TBD")
-- Measurement methodology (GHG Protocol, ISO 14064, etc.)
-- Reporting frequency (quarterly monitoring, annual reporting)
+- Detailed KPI table: KPI | Unit | Baseline | Target | Methodology | Reporting Frequency
+- Include: emissions reduction, renewable capacity, decommissioning progress, worker reskilling
+- Methodology: GHG Protocol, ISO 14064
 
-### 8. TPT MECHANISM (TRANSITION PERFORMANCE TARGETS)
+### 8. TPT MECHANISM (Transition Performance Targets)
+- TPT table: TPT | Baseline | Target | Milestones | Margin Adjustment
+- Margin mechanics: -5 to -15 bps for achieving, +5 to +10 bps for missing
+- Annual third-party verification required
+- Grace period and consequences of TPT miss
 
-**Per LMA Guide to Transition Loans - TPTs differ from SLL SPTs**
+### 9. RISK MITIGATION & EXTERNAL REVIEW
+For EACH red flag, provide detailed response:
+- Issue identified
+- Concrete mitigation strategy (specific actions)
+- Monitoring mechanism
+- Timeline (Q${CURRENT_QUARTER} ${CURRENT_YEAR}+)
 
-TPTs must demonstrate:
-1. **Ambition**: Aligned with Paris Agreement 1.5°C pathway
-2. **Materiality**: Core to borrower's transition strategy
-3. **Measurability**: Quantifiable with credible methodology
-4. **Verification**: Third-party assurance required
-
-- TPT table with annual milestones (years ${CURRENT_YEAR}-${data.targetYear})
-- Margin adjustment mechanics (±5-15 bps typical range)
-- Verification requirements
-- Grace period for remediation
-- Consequences of TPT miss (margin step-up OR sustainability event trigger)
-
-### 9. RISK MITIGATION & EXTERNAL REVIEW (CRITICAL SECTION - RESOLVE ALL RED FLAGS)
-**THIS SECTION MUST PROVIDE CONCRETE SOLUTIONS FOR EACH RED FLAG IDENTIFIED ABOVE**
-
-For EACH red flag:
-1. State the specific issue identified
-2. Provide a CONCRETE mitigation strategy (not vague promises)
-3. Define a monitoring mechanism to track resolution
-4. Set a timeline for resolution (using Q${CURRENT_QUARTER} ${CURRENT_YEAR} or later)
-
-Format as a detailed table:
-| Red Flag | Mitigation Strategy | Monitoring Mechanism | Resolution Timeline |
-
-The draft should demonstrate that ALL greenwashing concerns have been addressed with actionable plans.
-
-**9.2 External Review & Verification Requirements**
-
-Per LMA Guide to Transition Loans:
-
+**9.2 External Review Table:**
 | Review Type | Timing | Provider | Scope |
-|-------------|--------|----------|-------|
-| Second Party Opinion (SPO) | Pre-signing | [To be appointed] | Transition strategy credibility |
-| Annual Verification | Annually | [To be appointed] | TPT performance, use of proceeds |
-| GHG Audit | Annually | [Accredited verifier] | Scope 1, 2, 3 emissions |
-
-**Verification Methodology:**
-- GHG Protocol for emissions
-- SBTi methodology for target alignment
-- ISO 14064 for verification standards
+SPO (pre-signing), Annual Verification, GHG Audit
 
 ### 10. DFI ROADMAP & ANNEXES
+- Checklist for ${data.primaryDFI?.name || 'DFI'} submission
+- Timeline starting Q${CURRENT_QUARTER} ${CURRENT_YEAR}
+- Glossary: SBTi, TPT, SPO, GHG Protocol, bps, tCO2e, MW
 
-**10.1 DFI Submission Roadmap**
-- Documentation checklist for ${data.primaryDFI?.name || 'DFI'} submission
-- Timeline (starting Q${CURRENT_QUARTER} ${CURRENT_YEAR} - current quarter)
-- Key milestones (only Q${CURRENT_QUARTER}-Q4 for ${CURRENT_YEAR}, any quarter for future years)
-
-**10.2 Annexes**
-- Term sheet summary
-- TPT calculation methodologies
-- Eligible transition activities list
-- Glossary of terms (TPT, SPO, GHG Protocol, etc.)`;
+Output comprehensive markdown.`;
 
   console.log('[Phase 2B: GENERATE 6-10] Starting...');
   const result = await callWithFallback(systemPrompt, userPrompt, 3500, 0.35);
@@ -1039,13 +822,16 @@ export async function POST(request: NextRequest) {
       });
     });
 
-    // Prepare clause data
-    const clauses = relevantClauses?.slice(0, 4).map(clause => ({
+    // Prepare clause data - include AI-generated contextualized examples
+    const clauses = relevantClauses?.slice(0, 6).map(clause => ({
       id: clause.id,
       type: clause.metadata.clauseType?.replace(/_/g, ' ') || 'General',
       source: clause.metadata.source || 'LMA Standard',
-      content: clause.content.substring(0, 300),
+      content: clause.content.substring(0, 500),
       howToApply: clause.advice?.howToApply || 'Apply standard template',
+      contextualizedExample: clause.advice?.contextualizedExample, // AI-adjusted clause
+      relevanceScore: clause.advice?.relevanceScore,
+      keyConsiderations: clause.advice?.keyConsiderations,
     })) || [];
 
     // Ensure target year is valid
@@ -1158,7 +944,7 @@ export async function POST(request: NextRequest) {
     // ========================================================================
     // PHASE 1: ANALYZE
     // ========================================================================
-    const phase1Result = await phase1Analyze(preparedData, lmaGuideContext);
+    const phase1Result = await phase1Analyze(preparedData);
     if (!phase1Result.success || !phase1Result.plan) {
       return NextResponse.json(
         { success: false, error: `Phase 1 failed: ${phase1Result.error}` },
@@ -1211,10 +997,17 @@ ${sections6to10Result.content}
     // ========================================================================
     const reviewResult = await phase3Review(combinedDraft, preparedData);
 
-    const finalDraft = reviewResult.success ? reviewResult.content : combinedDraft;
+    // ========================================================================
+    // PROGRAMMATIC CLAUSE INSERTION (no AI needed - 100% reliable)
+    // ========================================================================
+    const adaptedClausesSection = buildAdaptedClausesSection(preparedData.clauses, projectName);
+
+    // Combine reviewed draft with programmatically-built clause section
+    const finalDraft = (reviewResult.success ? reviewResult.content : combinedDraft) + adaptedClausesSection;
     const totalTime = Date.now() - startTime;
 
-    console.log(`[Draft Generator] Complete in ${totalTime}ms (3 phases)`);
+    console.log(`[Draft Generator] Complete in ${totalTime}ms (3 phases + clause insertion)`);
+    console.log(`[Draft Generator] Inserted ${preparedData.clauses.length} adapted clauses`);
 
     return NextResponse.json({
       success: true,

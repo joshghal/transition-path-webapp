@@ -27,10 +27,11 @@ Given a clause template and project context, provide practical, actionable guida
   "howToApply": "<Specific guidance on how to adapt this clause for the project, mentioning project-specific details like sector, KPIs, etc.>",
   "whenToUse": "<Conditions or scenarios when this clause should be included in the loan agreement>",
   "keyConsiderations": ["<consideration 1>", "<consideration 2>", "<consideration 3>"],
-  "suggestedModifications": "<Any modifications to consider for African/transition finance context>"
+  "suggestedModifications": "<Any modifications to consider for African/transition finance context>",
+  "contextualizedExample": "<A concrete example of how this clause could be written specifically for this project, incorporating project name, sector, country, KPIs/SPTs where relevant. Write it as actual clause language that could be used in a loan agreement.>"
 }
 
-Keep responses concise and actionable. Focus on practical guidance for project developers negotiating with lenders.`;
+Keep responses concise and actionable. Focus on practical guidance for project developers negotiating with lenders. The contextualizedExample should be a ready-to-use adaptation of the original clause tailored to the project.`;
 
 export async function POST(request: NextRequest) {
   try {
@@ -91,7 +92,8 @@ Provide practical guidance for this project developer on how to use this clause.
           'Ensure alignment with your project timeline',
           'Consider local regulatory requirements'
         ],
-        suggestedModifications: 'Work with your DFI partners to adapt standard LMA language for local context.'
+        suggestedModifications: 'Work with your DFI partners to adapt standard LMA language for local context.',
+        contextualizedExample: `[This clause should be adapted to specifically reference ${projectContext.projectName}, the ${projectContext.sector} sector in ${projectContext.country}, and any relevant KPIs or SPTs established for the project.]`
       },
       provider: 'fallback',
     });
