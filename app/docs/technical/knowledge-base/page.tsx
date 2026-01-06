@@ -29,11 +29,8 @@ export default function KnowledgeBasePage() {
         rows={[
           [<a key="1" href="#core-documents" className="font-semibold text-verdex-700 hover:underline">LMA Core Documents</a>, '15', 'Facility agreements, guides, templates'],
           [<a key="2" href="#africa-documents" className="font-semibold text-verdex-700 hover:underline">Africa-Specific Documents</a>, '3', 'Kenya, Nigeria, Tanzania, Uganda, Zambia, OHADA'],
-          [<a key="3" href="https://www.lma.eu.com/application/files/9917/6035/1809/Guide_to_Transition_Loans_-_16_October_2025.pdf" target="_blank" rel="noopener noreferrer" className="text-verdex-600 hover:underline">LMA Transition Loan Guide</a>, '1', '5 Core Components validation'],
-          [<a key="4" href="https://www.lma.eu.com/application/files/1917/4298/0817/Green_Loan_Principles_-_26_March_2025.pdf" target="_blank" rel="noopener noreferrer" className="text-verdex-600 hover:underline">Green Loan Principles (Mar 2025)</a>, '1', 'Green loan compliance'],
-          [<a key="5" href="https://www.lma.eu.com/application/files/6317/4298/0865/Sustainability-Linked_Loan_Principles_-_26_March_2025.pdf" target="_blank" rel="noopener noreferrer" className="text-verdex-600 hover:underline">SLL Principles (Mar 2025)</a>, '1', 'Sustainability-linked loan compliance'],
-          [<a key="6" href="https://sciencebasedtargets.org/resources/files/Net-Zero-Standard-v2-Consultation-Draft.pdf" target="_blank" rel="noopener noreferrer" className="text-verdex-600 hover:underline">SBTi Net-Zero Standard V2</a>, '1', 'Science-based target validation'],
-          [<a key="7" href="https://unfccc.int/sites/default/files/english_paris_agreement.pdf" target="_blank" rel="noopener noreferrer" className="text-verdex-600 hover:underline">Paris Agreement</a>, '1', 'Article 2, 4, 6, 9, 13 alignment'],
+          [<a key="3" href="https://sciencebasedtargets.org/resources/files/Net-Zero-Standard-v2-Consultation-Draft.pdf" target="_blank" rel="noopener noreferrer" className="text-verdex-600 hover:underline">SBTi Net-Zero Standard V2</a>, '1', 'Science-based target validation'],
+          [<a key="4" href="https://unfccc.int/sites/default/files/english_paris_agreement.pdf" target="_blank" rel="noopener noreferrer" className="text-verdex-600 hover:underline">Paris Agreement</a>, '1', 'Article 2, 4, 6, 9, 13 alignment'],
         ]}
       />
 

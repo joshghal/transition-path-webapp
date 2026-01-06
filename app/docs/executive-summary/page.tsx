@@ -25,7 +25,7 @@ export default function ExecutiveSummaryPage() {
       {/* Hero Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 my-8">
         {[
-          { value: '$247B', label: 'Annual financing gap' },
+          { value: '$233B', label: 'Annual financing gap' },
           { value: '2%', label: 'Global climate finance' },
           { value: '60%', label: 'Best solar resources' },
           { value: '7', label: 'Priority countries' },

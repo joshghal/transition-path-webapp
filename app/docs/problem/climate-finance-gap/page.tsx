@@ -101,6 +101,43 @@ export default function ClimateFinanceGapPage() {
         ))}
       </div>
 
+      {/* Research Validation */}
+      <div className="my-8">
+        <div>
+          <p className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-3">Research Validation</p>
+          <p className="text-gray-700 mb-4">
+            This isn&apos;t speculation — leading institutions have documented the capacity gap:
+          </p>
+
+          <div className="space-y-3">
+            <a
+              href="https://sdgfinance.undp.org/news-events/attracting-climate-finance-africa-through-development-bankable-project-pipelines"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block p-4 bg-gradient-to-r from-verdex-50/80 to-transparent border-l-4 border-verdex-500 hover:from-verdex-100/80 transition-colors"
+            >
+              <span className="text-xs font-bold text-verdex-600 uppercase tracking-wide">UNDP</span>
+              <p className="mt-1 text-gray-700 italic">&quot;Many developers in low-income countries lack the expertise to structure viable, bankable projects.&quot;</p>
+            </a>
+
+            <a
+              href="https://www.climatepolicyinitiative.org/gca-africa-adaptation-finance/barriers/bankability-barriers/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block p-4 bg-gradient-to-r from-emerald-50/80 to-transparent border-l-4 border-emerald-500 hover:from-emerald-100/80 transition-colors"
+            >
+              <span className="text-xs font-bold text-emerald-600 uppercase tracking-wide">Climate Policy Initiative</span>
+              <p className="mt-1 text-gray-700 italic">&quot;The lack of bankable projects is due to inadequate project preparation and limited technical capacity.&quot;</p>
+            </a>
+          </div>
+
+          <p className="mt-6 text-lg font-medium text-gray-900">
+            A developer has a project and a PDF. Lenders have frameworks and capital.
+            <span className="text-verdex-600"> Nobody has the bridge</span> — until now.
+          </p>
+        </div>
+      </div>
+
       <h2 id="regulatory-evolution" className="text-2xl font-display font-semibold text-gray-900 mt-12 mb-4">
         The Regulatory Evolution
       </h2>
