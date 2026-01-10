@@ -76,6 +76,8 @@ function SearchPageContent() {
   const [selectedDocType, setSelectedDocType] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [copiedId, setCopiedId] = useState(false);
+  const [documentUrl, setDocumentUrl] = useState<string | null>(null);
+  const [documentUrlLoading, setDocumentUrlLoading] = useState(false);
   const [initialSearchDone, setInitialSearchDone] = useState(false);
   const [searchMode, setSearchMode] = useState<SearchMode>('keyword');
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -118,6 +120,36 @@ function SearchPageContent() {
       .then(data => setIndexStats(data.indexStats))
       .catch(console.error);
   }, []);
+
+  // Fetch document URL when selectedClause changes
+  useEffect(() => {
+    if (!selectedClause) {
+      setDocumentUrl(null);
+      setDocumentUrlLoading(false);
+      return;
+    }
+
+    const fetchDocUrl = async () => {
+      setDocumentUrlLoading(true);
+      try {
+        const params = new URLSearchParams();
+        if (selectedClause.metadata.source) {
+          params.set('source', selectedClause.metadata.source);
+        }
+        params.set('clauseId', selectedClause.id);
+
+        const res = await fetch(`/api/document-url?${params}`);
+        const data = await res.json();
+        setDocumentUrl(data.url || null);
+      } catch {
+        setDocumentUrl(null);
+      } finally {
+        setDocumentUrlLoading(false);
+      }
+    };
+
+    fetchDocUrl();
+  }, [selectedClause]);
 
   // Handle query parameter from URL (e.g., from results page)
   useEffect(() => {
@@ -483,9 +515,30 @@ function SearchPageContent() {
                         {selectedClause.metadata.source && (
                           <div className="flex items-start gap-2">
                             <span className="text-xs font-medium text-gray-500 w-16 flex-shrink-0">Source</span>
-                            <span className="text-xs text-gray-700 break-words">{selectedClause.metadata.source.length > 35 ? `${selectedClause.metadata.source.substring(0, 35)}...` : selectedClause.metadata.source}</span>
+                            <span className="text-xs text-gray-700 break-words flex-1">{selectedClause.metadata.source.length > 35 ? `${selectedClause.metadata.source.substring(0, 35)}...` : selectedClause.metadata.source}</span>
                           </div>
                         )}
+                        {/* Document Link - separate row */}
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-medium text-gray-500 w-16 flex-shrink-0">Document</span>
+                          {documentUrlLoading ? (
+                            <span className="text-xs text-gray-400">Loading...</span>
+                          ) : documentUrl ? (
+                            <a
+                              href={documentUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-xs text-verdex-600 hover:text-verdex-700 font-medium"
+                            >
+                              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                              </svg>
+                              View Official PDF
+                            </a>
+                          ) : (
+                            <span className="text-xs text-gray-400">Not available</span>
+                          )}
+                        </div>
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-medium text-gray-500 w-16 flex-shrink-0">Clause ID</span>
                           <span className="text-xs text-gray-700 font-mono truncate flex-1" title={selectedClause.id}>

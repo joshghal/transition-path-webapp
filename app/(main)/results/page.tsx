@@ -621,6 +621,7 @@ export default function ResultsPage() {
   const [clauseSearchQuery, setClauseSearchQuery] = useState('');
   const [selectedClauseModal, setSelectedClauseModal] = useState<RelevantClause | null>(null);
   const [originalClauseExpanded, setOriginalClauseExpanded] = useState(false);
+  const [modalDocumentUrl, setModalDocumentUrl] = useState<string | null>(null);
   const [draftLoading, setDraftLoading] = useState(false);
   const [generatedDraft, setGeneratedDraft] = useState<string | null>(null);
   const [draftModalOpen, setDraftModalOpen] = useState(false);
@@ -646,6 +647,32 @@ export default function ResultsPage() {
       router.push('/assess');
     }
   }, [router]);
+
+  // Fetch document URL when modal clause changes
+  useEffect(() => {
+    if (!selectedClauseModal) {
+      setModalDocumentUrl(null);
+      return;
+    }
+
+    const fetchDocUrl = async () => {
+      try {
+        const params = new URLSearchParams();
+        if (selectedClauseModal.metadata.source) {
+          params.set('source', selectedClauseModal.metadata.source);
+        }
+        params.set('clauseId', selectedClauseModal.id);
+
+        const res = await fetch(`/api/document-url?${params}`);
+        const data = await res.json();
+        setModalDocumentUrl(data.url || null);
+      } catch {
+        setModalDocumentUrl(null);
+      }
+    };
+
+    fetchDocUrl();
+  }, [selectedClauseModal]);
 
   // Fetch relevant clauses based on project characteristics
   useEffect(() => {
@@ -1872,9 +1899,24 @@ export default function ResultsPage() {
 
             {/* Modal Footer */}
             <div className="px-5 py-3 border-t border-gray-100 flex items-center justify-between">
-              {selectedClauseModal.metadata.source && (
-                <span className="text-xs text-gray-400">Source: {selectedClauseModal.metadata.source}</span>
-              )}
+              <div className="flex items-center gap-3">
+                {selectedClauseModal.metadata.source && (
+                  <span className="text-xs text-gray-400">Source: {selectedClauseModal.metadata.source}</span>
+                )}
+                {modalDocumentUrl && (
+                  <a
+                    href={modalDocumentUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs text-verdex-600 hover:text-verdex-700 font-medium transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                    View Official Document
+                  </a>
+                )}
+              </div>
             </div>
           </div>
         </div>
