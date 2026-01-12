@@ -87,6 +87,7 @@ Base URL: `https://www.verdx.site`
 | `POST` | `/api/upload-pdf` | Upload PDF for AI-powered data extraction |
 | `POST` | `/api/chat` | RAG-powered conversational assistant |
 | `POST` | `/api/clause-advice` | Get AI advice for applying clauses |
+| `POST` | `/api/clause-insight` | Generate summary & example for a clause (cached) |
 | `POST` | `/api/generate-draft` | Generate LMA-compliant project draft |
 
 ### Quick Examples
@@ -121,6 +122,17 @@ curl -X POST https://www.verdx.site/api/chat \
   -d '{
     "message": "What are KPI requirements for sustainability-linked loans?",
     "history": []
+  }'
+```
+
+**Get Clause Insight (Summary & Example):**
+```bash
+curl -X POST https://www.verdx.site/api/clause-insight \
+  -H "Content-Type: application/json" \
+  -d '{
+    "clauseId": "margin-ratchet-1",
+    "content": "MARGIN RATCHET CLAUSE...",
+    "clauseType": "margin_ratchet"
   }'
 ```
 
@@ -212,6 +224,7 @@ verdex-webapp/
 │   │   ├── upload-pdf/         # PDF processing
 │   │   ├── chat/               # RAG chat
 │   │   ├── clause-advice/      # Clause guidance
+│   │   ├── clause-insight/     # Clause summary & example (cached)
 │   │   └── generate-draft/     # Draft generation
 │   ├── docs/                   # Documentation pages
 │   ├── assess/                 # Assessment UI

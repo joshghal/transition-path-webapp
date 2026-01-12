@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { formatClauseContent, getClausePreview } from '@/lib/clauseFormatter';
 import { ChatPanel, ChatTrigger } from '@/components/chat';
 import { ChatSource } from '@/lib/types';
+import { getCachedInsight, setCachedInsight, CachedClauseInsight, parseSummaryBullets } from '@/lib/clauseInsightCache';
 
 interface SearchResult {
   id: string;
@@ -34,13 +35,12 @@ interface SearchResponse {
 }
 
 const QUICK_SEARCHES = [
-  'margin ratchet sustainability',
-  'KPI definition climate',
-  'reporting covenant annual',
-  'verification external assurance',
-  'interest rate SOFR SONIA',
-  'use of proceeds transition',
-  'conditions precedent',
+  'sustainability performance target',
+  'emissions reduction KPI',
+  'margin adjustment mechanism',
+  'third party verification',
+  'use of proceeds renewable',
+  'transition pathway alignment',
 ];
 
 const CLAUSE_TYPE_LABELS: Record<string, string> = {
@@ -83,6 +83,11 @@ function SearchPageContent() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [pendingChatMessage, setPendingChatMessage] = useState<string | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Clause insight state (summary + example)
+  const [clauseInsight, setClauseInsight] = useState<CachedClauseInsight | null>(null);
+  const [insightLoading, setInsightLoading] = useState(false);
+  const [insightError, setInsightError] = useState<string | null>(null);
 
   // Handle scroll in the container and dispatch event for navbar
   const handleContainerScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
@@ -150,6 +155,63 @@ function SearchPageContent() {
 
     fetchDocUrl();
   }, [selectedClause]);
+
+  // Check localStorage for cached clause insight when selectedClause changes
+  useEffect(() => {
+    if (!selectedClause) {
+      setClauseInsight(null);
+      setInsightError(null);
+      return;
+    }
+
+    // Check cache for this clause
+    const cached = getCachedInsight(selectedClause.id);
+    setClauseInsight(cached);
+    setInsightError(null);
+  }, [selectedClause]);
+
+  // Generate clause insight (summary + example)
+  const generateClauseInsight = async () => {
+    if (!selectedClause) return;
+
+    setInsightLoading(true);
+    setInsightError(null);
+
+    try {
+      const response = await fetch('/api/clause-insight', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clauseId: selectedClause.id,
+          content: selectedClause.content,
+          clauseType: selectedClause.metadata.clauseType,
+          documentType: selectedClause.metadata.documentType
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate insight');
+      }
+
+      const data = await response.json();
+
+      // Save to localStorage cache
+      setCachedInsight(selectedClause.id, data.insight);
+
+      // Update state with the new insight
+      setClauseInsight({
+        ...data.insight,
+        generatedAt: Date.now(),
+        version: 'v1'
+      });
+    } catch (error) {
+      console.error('Failed to generate insight:', error);
+      setInsightError(error instanceof Error ? error.message : 'Failed to generate insight');
+    } finally {
+      setInsightLoading(false);
+    }
+  };
 
   // Handle query parameter from URL (e.g., from results page)
   useEffect(() => {
@@ -460,7 +522,7 @@ function SearchPageContent() {
                 </div>
 
                 {/* Clause Preview */}
-                <div className="lg:col-span-3 lg:sticky lg:top-24 lg:self-start">
+                <div className="lg:col-span-3 lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100vh-120px)] lg:overflow-y-auto scrollbar-hide">
                   {selectedClause ? (
                     <div className="glass-card rounded-3xl p-6">
                       <div className="flex justify-between items-start mb-4">
@@ -504,10 +566,6 @@ function SearchPageContent() {
                             Section {selectedClause.metadata.chunkIndex + 1} of {selectedClause.metadata.totalChunks}
                           </span>
                         )}
-                      </div>
-
-                      <div className="bg-white/80 p-4 rounded-xl text-sm text-gray-700 whitespace-pre-wrap overflow-auto max-h-[500px] border border-gray-100 leading-relaxed">
-                        {formatClauseContent(selectedClause.content)}
                       </div>
 
                       {/* Source & Clause ID */}
@@ -569,6 +627,121 @@ function SearchPageContent() {
                               </>
                             )}
                           </button>
+                        </div>
+                      </div>
+
+                      {/* AI Summary & Example Section */}
+                      <div className="mt-4 bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                        <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 bg-gradient-to-br from-verdex-100 to-teal-100 rounded-lg flex items-center justify-center">
+                              <svg className="w-3.5 h-3.5 text-verdex-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                              </svg>
+                            </div>
+                            <span className="text-sm font-display font-medium text-gray-900">AI Clause Guide</span>
+                          </div>
+                          {clauseInsight && (
+                            <span className="text-xs text-gray-400">
+                              Cached {new Date(clauseInsight.generatedAt).toLocaleDateString()}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="p-4">
+                          {insightLoading ? (
+                            <div className="flex items-center justify-center py-8">
+                              <div className="animate-spin w-5 h-5 border-2 border-verdex-600 border-t-transparent rounded-full mr-3" />
+                              <span className="text-sm text-gray-500">Generating insight...</span>
+                            </div>
+                          ) : insightError ? (
+                            <div className="text-center py-6">
+                              <p className="text-sm text-rose-600 mb-3">{insightError}</p>
+                              <button
+                                onClick={generateClauseInsight}
+                                className="text-sm text-verdex-600 hover:text-verdex-700 font-medium"
+                              >
+                                Try again
+                              </button>
+                            </div>
+                          ) : clauseInsight ? (
+                            <div className="space-y-4">
+                              {/* Summary */}
+                              <div className="bg-verdex-50 border border-verdex-200 rounded-xl p-4">
+                                <div className="flex items-start gap-3">
+                                  <div className="w-7 h-7 bg-verdex-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <svg className="w-4 h-4 text-verdex-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-semibold text-verdex-800 uppercase tracking-wide mb-1.5">Key Points</p>
+                                    <ul className="text-sm text-gray-700 space-y-1.5">
+                                      {parseSummaryBullets(clauseInsight.summary).map((point, i) => (
+                                        <li key={i} className="flex items-start gap-2">
+                                          <span className="w-1.5 h-1.5 bg-verdex-500 rounded-full mt-1.5 flex-shrink-0" />
+                                          <span>{point}</span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Adapted Clause */}
+                              <div className="bg-teal-50 border border-teal-200 rounded-xl p-4">
+                                <div className="flex items-start gap-3">
+                                  <div className="w-7 h-7 bg-teal-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <svg className="w-4 h-4 text-teal-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                    </svg>
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-semibold text-teal-800 uppercase tracking-wide mb-1.5">Adapted Clause</p>
+                                    <p className="text-sm text-gray-700 leading-relaxed">{clauseInsight.example}</p>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <button
+                                onClick={generateClauseInsight}
+                                className="text-xs text-gray-400 hover:text-verdex-600 transition-colors flex items-center gap-1"
+                              >
+                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                                Regenerate
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="text-center py-6">
+                              <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                                </svg>
+                              </div>
+                              <p className="text-sm text-gray-500 mb-4">
+                                Get key points and ready-to-use adapted clause language
+                              </p>
+                              <button
+                                onClick={generateClauseInsight}
+                                className="inline-flex items-center gap-2 bg-gradient-to-r from-verdex-600 to-teal-600 hover:from-verdex-700 hover:to-teal-700 text-white text-sm font-medium px-5 py-2.5 rounded-xl transition-all shadow-sm hover:shadow-md"
+                              >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                                Generate Guide
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Original Clause Text */}
+                      <div className="mt-4">
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Original Clause</p>
+                        <div className="bg-white/80 p-4 rounded-xl text-sm text-gray-700 whitespace-pre-wrap overflow-auto max-h-[400px] border border-gray-100 leading-relaxed">
+                          {formatClauseContent(selectedClause.content)}
                         </div>
                       </div>
                     </div>

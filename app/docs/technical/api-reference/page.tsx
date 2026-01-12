@@ -20,6 +20,7 @@ export default function APIReferencePage() {
         { id: 'upload-pdf-endpoint', title: 'Upload PDF Endpoint', level: 2 },
         { id: 'chat-endpoint', title: 'Chat Endpoint', level: 2 },
         { id: 'clause-advice-endpoint', title: 'Clause Advice Endpoint', level: 2 },
+        { id: 'clause-insight-endpoint', title: 'Clause Insight Endpoint', level: 2 },
         { id: 'generate-draft-endpoint', title: 'Generate Draft Endpoint', level: 2 },
       ]}
     >
@@ -595,6 +596,76 @@ const response = await fetch('/api/upload-pdf', {
   "provider": "groq"
 }`}
       />
+
+      {/* ============================== CLAUSE INSIGHT ENDPOINT ============================== */}
+      <h2 id="clause-insight-endpoint" className="text-2xl font-display font-semibold text-gray-900 mt-12 mb-4">
+        POST /api/clause-insight
+      </h2>
+
+      <p className="text-gray-700 leading-relaxed mb-4">
+        Generate key points and ready-to-use adapted clause language for a specific LMA clause.
+        Results are cached client-side in localStorage for instant retrieval on subsequent views.
+      </p>
+
+      <h3 className="text-lg font-semibold text-gray-900 mt-6 mb-3">cURL Example</h3>
+
+      <CollapsibleCodeBlock
+        language="bash"
+        title="cURL"
+        code={`curl -X POST https://www.verdx.site/api/clause-insight \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "clauseId": "margin-ratchet-1",
+    "content": "MARGIN RATCHET CLAUSE (Sustainability-Linked)\\n\\nThe applicable Margin shall be adjusted quarterly based on the Borrower achievement of Sustainability Performance Targets...",
+    "clauseType": "margin_ratchet",
+    "documentType": "sustainability_linked_loan"
+  }'`}
+      />
+
+      <h3 className="text-lg font-semibold text-gray-900 mt-6 mb-3">Request Body</h3>
+
+      <CollapsibleCodeBlock
+        language="typescript"
+        title="Request"
+        code={`{
+  // Required fields
+  "clauseId": "margin-ratchet-1",   // Unique clause identifier
+  "content": "MARGIN RATCHET CLAUSE (Sustainability-Linked)...",  // Full clause text
+
+  // Optional fields (improve response quality)
+  "clauseType": "margin_ratchet",    // Type classification
+  "documentType": "sustainability_linked_loan"  // Source document type
+}`}
+      />
+
+      <h3 className="text-lg font-semibold text-gray-900 mt-6 mb-3">Response</h3>
+
+      <CollapsibleCodeBlock
+        language="typescript"
+        title="Response"
+        code={`{
+  "clauseId": "margin-ratchet-1",
+  "insight": {
+    "summary": "• Links interest rate to sustainability performance\\n• Rate drops when targets met, rises when missed\\n• Creates financial incentive for environmental outcomes",
+
+    "example": "The [Borrower] shall achieve a minimum [Target %] reduction in Scope 1 and 2 GHG emissions from the [Baseline] by [Target Year]. Upon verified achievement, the Margin shall decrease by [X] basis points; upon failure to achieve, the Margin shall increase by [Y] basis points."
+  },
+  "duration": 1234  // Generation time in milliseconds
+}`}
+      />
+
+      <InfoBox type="info" title="Client-Side Caching">
+        The search page automatically caches clause insights in localStorage. When a user views the same
+        clause again, the cached summary and example display instantly without an API call. The cache key
+        format is <code>verdex_clause_insight_&#123;clauseId&#125;</code> with version tracking for cache
+        invalidation. Users can regenerate insights to refresh the cache.
+      </InfoBox>
+
+      <InfoBox type="info" title="AI Provider">
+        This endpoint uses ASI1-mini for cost-efficient generation. Responses are optimized for
+        clarity and practical application, explaining LMA concepts in plain language suitable for
+        project developers without legal expertise.
+      </InfoBox>
 
       {/* ============================== GENERATE DRAFT ENDPOINT ============================== */}
       <h2 id="generate-draft-endpoint" className="text-2xl font-display font-semibold text-gray-900 mt-12 mb-4">
