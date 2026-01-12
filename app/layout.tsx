@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import GoogleAnalytics from '@/components/GoogleAnalytics';
 import './globals.css';
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://verdex.app';
@@ -175,6 +176,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen">
+        <GoogleAnalytics />
         {children}
       </body>
     </html>
