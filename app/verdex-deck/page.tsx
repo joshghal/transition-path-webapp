@@ -1247,44 +1247,43 @@ export default function PitchDeckPage() {
                 <h3 className="relative text-lg font-semibold text-white mb-4">Revenue Streams</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {[
-                    { stream: 'SaaS', range: '$500-10K/mo', pct: '60%' },
-                    { stream: 'Transaction', range: '5-15 bps', pct: '20%' },
-                    { stream: 'API Licensing', range: '$50K+/yr', pct: '15%' },
-                    { stream: 'Data', range: '$25-100K/yr', pct: '5%' },
+                    { stream: 'Free', range: '$0', target: 'Basic score always free' },
+                    { stream: 'Credits', range: '$10-50', target: 'Reports + drafts' },
+                    { stream: 'Professional', range: '$500/mo', target: 'Unlimited, API' },
+                    { stream: 'Enterprise', range: '$5K+/mo', target: 'Banks, DFIs' },
                   ].map((item) => (
                     <div key={item.stream} className="p-4 rounded-xl bg-white/20 border border-white/10">
                       <div className="text-white font-semibold">{item.stream}</div>
                       <div className="text-emerald-100 text-sm">{item.range}</div>
-                      <div className="text-white/60 text-xs mt-1">{item.pct} of revenue</div>
+                      <div className="text-white/60 text-xs mt-1">{item.target}</div>
                     </div>
                   ))}
                 </div>
               </div>
-              {/* Unit Economics */}
+              {/* Why It Scales */}
               <div className="col-span-12 md:col-span-4 glass-card rounded-2xl p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Unit Economics</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Why It Scales</h3>
                 <div className="space-y-4">
-                  <div className="flex justify-between"><span className="text-gray-500">CAC</span><span className="font-semibold">$2,000 → $800</span></div>
-                  <div className="flex justify-between"><span className="text-gray-500">LTV</span><span className="font-semibold">$30K → $150K</span></div>
-                  <div className="flex justify-between"><span className="text-gray-500">LTV:CAC</span><span className="font-semibold text-verdex-600">15:1 → 188:1</span></div>
-                  <div className="flex justify-between"><span className="text-gray-500">Gross Margin</span><span className="font-semibold">85%</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Assessment time</span><span className="font-semibold">&lt;60s vs 2-4 weeks</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Cost per project</span><span className="font-semibold">Free → $50 vs $50K+</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Marginal cost</span><span className="font-semibold text-verdex-600">Near zero</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Geography</span><span className="font-semibold">Any market</span></div>
                 </div>
               </div>
-              {/* 5-Year Projection */}
+              {/* Growth Path */}
               <div className="col-span-12 glass-card rounded-2xl p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">5-Year Revenue Projection</h3>
-                <div className="flex items-end justify-between gap-4" style={{ height: '150px' }}>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Growth Path</h3>
+                <div className="grid grid-cols-4 gap-4">
                   {[
-                    { year: 'Y1', value: '$450K', height: 15 },
-                    { year: 'Y2', value: '$1.5M', height: 30 },
-                    { year: 'Y3', value: '$3M', height: 45 },
-                    { year: 'Y4', value: '$8M', height: 80 },
-                    { year: 'Y5', value: '$20M', height: 150, highlight: true },
-                  ].map((item) => (
-                    <div key={item.year} className="flex-1 flex flex-col items-center justify-end h-full">
-                      <div className="text-sm font-semibold text-gray-600 mb-2">{item.value}</div>
-                      <div className={`w-full rounded-t-lg ${item.highlight ? 'bg-gradient-to-t from-verdex-600 to-verdex-400' : 'bg-verdex-200'}`} style={{ height: `${item.height}px` }} />
-                      <div className={`text-sm mt-2 ${item.highlight ? 'text-verdex-600 font-semibold' : 'text-gray-400'}`}>{item.year}</div>
+                    { phase: 'Now', focus: 'Developer Direct', detail: 'Free tier, credits' },
+                    { phase: 'Phase 1', focus: 'DFI Partnerships', detail: 'Pipeline integration' },
+                    { phase: 'Phase 2', focus: 'Platform APIs', detail: 'LMA.Automate, Avvoka' },
+                    { phase: 'Phase 3', focus: 'Enterprise', detail: '$5K+/mo, white-label' },
+                  ].map((item, idx) => (
+                    <div key={item.phase} className={`p-4 rounded-xl ${idx === 0 ? 'bg-verdex-100 border-2 border-verdex-300' : 'bg-gray-50'}`}>
+                      <div className={`text-xs uppercase tracking-wider mb-1 ${idx === 0 ? 'text-verdex-600' : 'text-gray-400'}`}>{item.phase}</div>
+                      <div className="font-semibold text-gray-900">{item.focus}</div>
+                      <div className="text-sm text-gray-500">{item.detail}</div>
                     </div>
                   ))}
                 </div>

@@ -16,7 +16,7 @@ export default function MarketOpportunityPage() {
       tableOfContents={[
         { id: 'tam', title: 'TAM Analysis', level: 2 },
         { id: 'sam', title: 'SAM Analysis', level: 2 },
-        { id: 'som', title: 'SOM Projection', level: 2 },
+        { id: 'som', title: 'Our Opportunity', level: 2 },
         { id: 'why-now', title: 'Why Now?', level: 2 },
       ]}
     >
@@ -60,23 +60,29 @@ export default function MarketOpportunityPage() {
       </div>
 
       <h2 id="som" className="text-2xl font-display font-semibold text-gray-900 mt-12 mb-4">
-        SOM: Platform Revenue Projection
+        SOM: Our Opportunity
       </h2>
 
-      <DataTable
-        headers={['Metric', 'Year 1', 'Year 3', 'Year 5']}
-        rows={[
-          ['Projects assessed', '100', '500', '2,000'],
-          ['Average deal size', '$50M', '$75M', '$100M'],
-          ['Platform fee', '5-15 bps', '5-15 bps', '5-15 bps'],
-          ['Subscription revenue', '$200K', '$1M', '$5M'],
-          ['Transaction revenue', '$250K', '$2M', '$15M'],
-          [<span key="total" className="font-bold text-verdex-700">Total Revenue</span>, <span key="y1" className="font-bold">$450K</span>, <span key="y3" className="font-bold">$3M</span>, <span key="y5" className="font-bold">$20M</span>],
-        ]}
-      />
+      <p className="text-gray-700 leading-relaxed mb-6">
+        If Verdex enables just <strong>10% of the financing gap</strong>, the impact is significant:
+      </p>
 
-      <InfoBox type="success" title="Year 5 Target">
-        <strong>USD 20 million ARR</strong> through a combination of subscription and transaction-based revenue.
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 my-6">
+        {[
+          { value: '$23B', label: 'Additional climate finance' },
+          { value: '50+ GW', label: 'Renewable capacity enabled' },
+          { value: '100M+', label: 'People with electricity' },
+          { value: '100M+', label: 'Tonnes CO2 avoided' },
+        ].map((item, idx) => (
+          <div key={idx} className="p-4 rounded-xl bg-verdex-50 border border-verdex-100 text-center">
+            <div className="text-2xl font-bold text-verdex-700">{item.value}</div>
+            <div className="text-xs text-verdex-600 mt-1">{item.label}</div>
+          </div>
+        ))}
+      </div>
+
+      <InfoBox type="info" title="Focus on Impact">
+        Revenue follows impact. By helping more projects become bankable, Verdex creates value for the entire ecosystem.
       </InfoBox>
 
       <h2 id="why-now" className="text-2xl font-display font-semibold text-gray-900 mt-12 mb-4">
