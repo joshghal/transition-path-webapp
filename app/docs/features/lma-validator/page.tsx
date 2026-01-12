@@ -15,7 +15,7 @@ export default function LMAValidatorPage() {
       nextPage={{ title: 'DFI Matching', href: '/docs/features/dfi-matching' }}
       tableOfContents={[
         { id: 'overview', title: 'Overview', level: 2 },
-        { id: 'five-components', title: 'The 5 Components', level: 2 },
+        { id: 'five-components', title: '5 Core Components', level: 2 },
         { id: 'scoring', title: 'Scoring Framework', level: 2 },
         { id: 'flow', title: 'Validation Flow', level: 2 },
         { id: 'implementation', title: 'Implementation', level: 2 },
@@ -34,17 +34,21 @@ export default function LMAValidatorPage() {
       </InfoBox>
 
       <h2 id="five-components" className="text-2xl font-display font-semibold text-gray-900 mt-12 mb-4">
-        The 5 Assessment Components
+        The 5 Core Components
       </h2>
 
+      <p className="text-gray-700 leading-relaxed mb-4">
+        Based on the <strong>LMA Transition Loan Guide (October 2025)</strong>, every transition loan must address these 5 Core Components:
+      </p>
+
       <DataTable
-        headers={['#', 'Component', 'Max Score', 'Key Criteria']}
+        headers={['#', 'Component', 'Max Score', 'How Verdex Validates']}
         rows={[
-          ['1', <span key="1" className="font-semibold text-verdex-700">Strategy Alignment</span>, '20', 'Published plan (10), SBTi reference (5), Paris alignment (5)'],
-          ['2', <span key="2" className="font-semibold text-verdex-700">Use of Proceeds</span>, '20', 'Clear description (10), Project type (5), Transition activities (5)'],
-          ['3', <span key="3" className="font-semibold text-verdex-700">Target Ambition</span>, '20', 'Reduction target ≥42% (15), Near-term year (5)'],
-          ['4', <span key="4" className="font-semibold text-verdex-700">Reporting & Verification</span>, '20', 'Third-party verification (15), Scope 3 measured (5)'],
-          ['5', <span key="5" className="font-semibold text-verdex-700">Project Selection</span>, '20', 'High-priority sector (10), Financing structure (5), Equity ≥20% (5)'],
+          ['1', <span key="1" className="font-semibold text-verdex-700">Transition Strategy</span>, '20', 'AI analysis of strategy documents, Paris alignment check'],
+          ['2', <span key="2" className="font-semibold text-verdex-700">Use of Proceeds</span>, '20', 'Eligibility check against transition activities'],
+          ['3', <span key="3" className="font-semibold text-verdex-700">Project Selection & Evaluation</span>, '20', 'Gap analysis, sector alignment, criteria matching'],
+          ['4', <span key="4" className="font-semibold text-verdex-700">Management of Proceeds</span>, '20', 'Documentation templates, tracking requirements'],
+          ['5', <span key="5" className="font-semibold text-verdex-700">Reporting</span>, '20', 'KPI generator, disclosure framework'],
         ]}
       />
 
@@ -142,36 +146,40 @@ export default function LMAValidatorPage() {
 
       <CodeBlock
         language="typescript"
-        code={`// LMA Validation Engine
+        code={`// LMA Validation Engine - 5 Core Components
 interface ValidationResult {
   eligibilityStatus: 'eligible' | 'partial' | 'ineligible';
   overallScore: number;
   components: {
-    strategyAlignment: ComponentScore;     // Max 20
-    useOfProceeds: ComponentScore;         // Max 20
-    projectSelection: ComponentScore;      // Max 20
-    proceedsManagement: ComponentScore;    // Max 20
-    reporting: ComponentScore;             // Max 20
+    transitionStrategy: ComponentScore;      // Max 20
+    useOfProceeds: ComponentScore;           // Max 20
+    projectSelection: ComponentScore;        // Max 20
+    managementOfProceeds: ComponentScore;    // Max 20
+    reporting: ComponentScore;               // Max 20
   };
   greenwashingRisk: 'low' | 'medium' | 'high';
   redFlags: string[];
   improvements: string[];
 }
 
-// Scoring criteria from LMA Transition Loan Guide
-const LMA_CRITERIA = {
-  strategyAlignment: {
-    hasPublishedPlan: 8,           // Published transition strategy
+// Based on LMA Transition Loan Guide (October 2025)
+const LMA_CORE_COMPONENTS = {
+  transitionStrategy: {
+    hasPublishedPlan: 8,           // Documented transition strategy
     parisAlignment: 7,              // 1.5°C or well-below 2°C
-    entityWideScope: 5,             // Not just project-level
-    thirdPartyVerification: 5       // External review
+    entityWideScope: 5              // Covers entire entity
   },
   useOfProceeds: {
     eligibleActivities: 10,         // Funds transition activities
-    quantifiableReductions: 8,      // Measurable emissions impact
-    noLockIn: 7                     // Avoids carbon lock-in
+    quantifiableReductions: 5,      // Measurable emissions impact
+    noLockIn: 5                     // Avoids carbon lock-in
+  },
+  projectSelection: {
+    alignedWithStrategy: 10,        // Supports transition strategy
+    evaluationProcess: 5,           // Clear selection criteria
+    sectorAlignment: 5              // Priority sector
   }
-  // ... additional components
+  // ... managementOfProceeds, reporting
 };`}
       />
 

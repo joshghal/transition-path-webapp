@@ -131,10 +131,10 @@ export default function APIReferencePage() {
   "lmaBaseScore": 80,           // Raw LMA score before penalty
   "greenwashingPenalty": 5,     // Points deducted
 
-  // LMA Component Breakdown
+  // LMA 5 Core Components (October 2025 Transition Loan Guide)
   "lmaComponents": [
     {
-      "name": "Strategy Alignment",
+      "name": "Transition Strategy",
       "score": 18,
       "maxScore": 20,
       "feedback": [
@@ -143,13 +143,12 @@ export default function APIReferencePage() {
           "description": "Published transition plan exists"
         },
         {
-          "status": "missing",
-          "description": "No SBTi alignment mentioned",
-          "action": "Commit to Science Based Targets initiative..."
+          "status": "met",
+          "description": "Paris Agreement 1.5°C alignment referenced"
         }
       ]
     }
-    // ... Use of Proceeds, Target Ambition, Reporting & Verification, Project Selection
+    // ... Use of Proceeds, Project Selection & Evaluation, Management of Proceeds, Reporting
   ],
 
   // Greenwashing Risk

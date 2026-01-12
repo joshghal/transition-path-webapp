@@ -257,33 +257,184 @@ Respond in JSON format only:
     throw new Error(result.error || 'Failed to parse AI response');
   } catch (error) {
     console.error('AI extraction error:', error);
-    // Return empty structure on error
-    return {
-      projectName: '',
-      country: '',
-      sector: '',
-      projectType: '',
-      description: '',
-      climateTargets: '',
-      financingNeeded: null,
-      debtAmount: null,
-      equityAmount: null,
-      transitionPlan: '',
-      baselineEmissions: '',
-      currentScope1: null,
-      currentScope2: null,
-      currentScope3: null,
-      targetScope1: null,
-      targetScope2: null,
-      targetScope3: null,
-      totalBaselineEmissions: null,
-      totalTargetEmissions: null,
-      statedReductionPercent: null,
-      targetYear: null,
-      verificationStatus: '',
-      hasPublishedPlan: '',
-    };
+    // Return fallback structure with regex-extracted data
+    return extractWithFallbackRegex(text);
   }
+}
+
+/**
+ * Fallback extraction using regex when AI fails
+ * Extracts basic project info from document text
+ */
+function extractWithFallbackRegex(text: string): {
+  projectName: string;
+  country: string;
+  sector: string;
+  projectType: string;
+  description: string;
+  climateTargets: string;
+  financingNeeded: number | null;
+  debtAmount: number | null;
+  equityAmount: number | null;
+  transitionPlan: string;
+  baselineEmissions: string;
+  currentScope1: number | null;
+  currentScope2: number | null;
+  currentScope3: number | null;
+  targetScope1: number | null;
+  targetScope2: number | null;
+  targetScope3: number | null;
+  totalBaselineEmissions: number | null;
+  totalTargetEmissions: number | null;
+  statedReductionPercent: number | null;
+  targetYear: number | null;
+  verificationStatus: string;
+  hasPublishedPlan: string;
+} {
+  console.log('[Fallback Extract] Using regex fallback extraction');
+  const fullTextLower = text.toLowerCase();
+
+  // Extract project name - try multiple patterns
+  let projectName = '';
+  // Pattern 1: "# Project Name" or "## Project Name" at start of line
+  const titleMatch = text.match(/^#\s*([^\n#]+)/m) ||
+    text.match(/^##\s*([^\n#]+)/m);
+  if (titleMatch) {
+    projectName = titleMatch[1].trim();
+  }
+  // Pattern 2: Verdex draft header format "Lagos Green Revolution Ltd"
+  if (!projectName) {
+    const verdexTitleMatch = text.match(/^([A-Z][A-Za-z\s&]+(?:Ltd|LLC|Inc|Corp|Limited|Company|SA|PLC)?)\s*$/m);
+    if (verdexTitleMatch && verdexTitleMatch[1].length > 5 && verdexTitleMatch[1].length < 80) {
+      projectName = verdexTitleMatch[1].trim();
+    }
+  }
+  // Pattern 3: Look for "Project Name:" or "Project:" label
+  if (!projectName) {
+    const labelMatch = text.match(/(?:project\s*name|project)\s*[:]\s*([^\n]+)/i);
+    if (labelMatch) {
+      projectName = labelMatch[1].trim();
+    }
+  }
+  // Pattern 4: First substantial capitalized line (likely title)
+  if (!projectName) {
+    const lines = text.split('\n').filter(l => l.trim().length > 0);
+    for (const line of lines.slice(0, 10)) {
+      const trimmed = line.trim();
+      // Skip short lines, all-caps headers like "EXECUTIVE SUMMARY", and common headers
+      if (trimmed.length > 10 && trimmed.length < 80 &&
+          !trimmed.match(/^[A-Z\s]+$/) &&
+          !trimmed.toLowerCase().includes('generated') &&
+          !trimmed.toLowerCase().includes('executive summary') &&
+          !trimmed.toLowerCase().includes('table of contents')) {
+        projectName = trimmed;
+        break;
+      }
+    }
+  }
+  console.log(`[Fallback Extract] Project name: "${projectName}"`);
+
+  // Extract country
+  const countries = ['kenya', 'nigeria', 'south africa', 'tanzania', 'ghana', 'egypt', 'morocco', 'ethiopia', 'senegal', 'uganda', 'rwanda'];
+  let country = '';
+  for (const c of countries) {
+    if (fullTextLower.includes(c)) {
+      country = c.charAt(0).toUpperCase() + c.slice(1);
+      if (c === 'south africa') country = 'South Africa';
+      break;
+    }
+  }
+
+  // Extract sector
+  const sectors = ['energy', 'manufacturing', 'agriculture', 'transport', 'mining', 'real estate', 'water'];
+  let sector = '';
+  for (const s of sectors) {
+    if (fullTextLower.includes(`sector: ${s}`) || fullTextLower.includes(`| ${s} |`) || fullTextLower.includes(`sector\n${s}`)) {
+      sector = s.charAt(0).toUpperCase() + s.slice(1);
+      break;
+    }
+  }
+
+  // Extract financials
+  let financingNeeded: number | null = null;
+  const budgetMatch = text.match(/budget[:\s]+(?:usd\s*)?\$?([\d,]+(?:\.\d+)?)/i) ||
+    text.match(/total[:\s]+(?:usd\s*)?\$?([\d,]+(?:\.\d+)?)/i) ||
+    text.match(/usd\s+([\d,]+(?:\.\d+)?)/i);
+  if (budgetMatch) {
+    financingNeeded = parseFloat(budgetMatch[1].replace(/,/g, ''));
+  }
+
+  // Extract emissions
+  let currentScope1: number | null = null;
+  let currentScope2: number | null = null;
+  let currentScope3: number | null = null;
+  const scope1Match = text.match(/scope\s*1[:\s]+(\d+(?:,\d+)?(?:\.\d+)?)\s*(?:tco2e?|tonnes?)/i);
+  if (scope1Match) currentScope1 = parseFloat(scope1Match[1].replace(/,/g, ''));
+  const scope2Match = text.match(/scope\s*2[:\s]+(\d+(?:,\d+)?(?:\.\d+)?)\s*(?:tco2e?|tonnes?)/i);
+  if (scope2Match) currentScope2 = parseFloat(scope2Match[1].replace(/,/g, ''));
+  const scope3Match = text.match(/scope\s*3[:\s]+(\d+(?:,\d+)?(?:\.\d+)?)\s*(?:tco2e?|tonnes?)/i);
+  if (scope3Match) currentScope3 = parseFloat(scope3Match[1].replace(/,/g, ''));
+
+  // Extract reduction percentage
+  let statedReductionPercent: number | null = null;
+  const reductionMatch = text.match(/(\d+(?:\.\d+)?)\s*%\s*(?:reduction|decrease|by\s+20\d{2})/i) ||
+    text.match(/reduce[^\d]*(\d+(?:\.\d+)?)\s*%/i);
+  if (reductionMatch) {
+    statedReductionPercent = parseFloat(reductionMatch[1]);
+  }
+
+  // Extract target year
+  let targetYear: number | null = null;
+  const yearMatch = text.match(/by\s+(20\d{2})/i) || text.match(/target[^\d]*(20\d{2})/i);
+  if (yearMatch) {
+    targetYear = parseInt(yearMatch[1]);
+  }
+
+  // Check for published plan
+  const hasPublishedPlan = fullTextLower.includes('published transition strategy') ||
+    fullTextLower.includes('published transition plan') ||
+    fullTextLower.includes('this document constitutes the published') ? 'yes' : '';
+
+  // Check for verification
+  const verificationStatus = fullTextLower.includes('third-party verification') ||
+    fullTextLower.includes('annual verification') ||
+    fullTextLower.includes('verified by dnv') ? 'Third-party verification commitment' : '';
+
+  // Extract description (first substantial paragraph)
+  let description = '';
+  const descMatch = text.match(/executive\s+summary[:\s]*([^#\n]{100,500})/i) ||
+    text.match(/aims?\s+to\s+([^.]{50,300})/i);
+  if (descMatch) {
+    description = descMatch[1].trim();
+  } else if (text.length > 500) {
+    description = text.substring(0, 400).replace(/\s+/g, ' ').trim();
+  }
+
+  return {
+    projectName,
+    country,
+    sector,
+    projectType: '',
+    description,
+    climateTargets: '',
+    financingNeeded,
+    debtAmount: null,
+    equityAmount: null,
+    transitionPlan: '',
+    baselineEmissions: '',
+    currentScope1,
+    currentScope2,
+    currentScope3,
+    targetScope1: null,
+    targetScope2: null,
+    targetScope3: null,
+    totalBaselineEmissions: currentScope1 && currentScope2 ? currentScope1 + currentScope2 + (currentScope3 || 0) : null,
+    totalTargetEmissions: null,
+    statedReductionPercent,
+    targetYear,
+    verificationStatus,
+    hasPublishedPlan,
+  };
 }
 
 // Extract LMA component sections from document text for AI evaluation

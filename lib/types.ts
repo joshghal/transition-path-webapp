@@ -310,16 +310,16 @@ export interface AssessmentResult {
   sector: Sector;
   eligibilityStatus: EligibilityStatus;
   overallScore: number;
+  // LMA 5 Core Components (October 2025 Transition Loan Guide)
   components: {
-    strategyAlignment: ComponentScore;
-    useOfProceeds: ComponentScore;
-    projectSelection: ComponentScore;
-    proceedsManagement: ComponentScore;
-    reporting: ComponentScore;
+    transitionStrategy: ComponentScore;       // Component 1
+    useOfProceeds: ComponentScore;            // Component 2
+    projectSelectionEvaluation: ComponentScore; // Component 3
+    managementOfProceeds: ComponentScore;     // Component 4
+    reporting: ComponentScore;                // Component 5
   };
   sbtiAssessment: SBTiAssessment;
   parisAlignment: ParisAlignment;
-  targetAmbition: TargetAmbitionAssessment;
   recommendedKPIs: KPIRecommendation[];
   greenwashingRisk: GreenwashingAssessment;
   requiredImprovements: string[];

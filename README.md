@@ -49,12 +49,12 @@ Upload PDF → LMA Assessment → Greenwashing Check → DFI Matching → Genera
 ```
 
 1. **Upload** — Submit project PDF or fill form manually
-2. **Validate** — Score against LMA's 5 Core Components:
-   - Strategy Alignment (Paris Agreement, SBTi, NDC)
-   - Use of Proceeds (eligible categories, allocation)
-   - Target Ambition (emissions reduction, baselines)
-   - Reporting & Verification (third-party assurance)
-   - Project Selection (governance, transparency)
+2. **Validate** — Score against LMA's 5 Core Components (October 2025 Guide):
+   - Transition Strategy (Paris alignment, published plan, entity-wide scope)
+   - Use of Proceeds (eligible activities, quantifiable reductions, no lock-in)
+   - Project Selection & Evaluation (aligned with strategy, evaluation process, sector alignment)
+   - Management of Proceeds (allocation, tracking, documentation)
+   - Reporting (KPI framework, disclosure, verification)
 3. **Greenwashing Detection** — AI-powered red flag identification
 4. **DFI Match** — Connect with relevant financiers based on sector, geography, deal size
 5. **Generate Draft** — Create LMA-compliant documentation with KPIs, SPTs, margin ratchets
