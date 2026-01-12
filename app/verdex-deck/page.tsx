@@ -12,6 +12,7 @@ import {
   FileCheck,
   FileText,
   Check,
+  X,
   Clock,
   Database,
   Users,
@@ -26,7 +27,11 @@ import {
   ChevronDown,
   Play,
   Layers,
-  Link2
+  Link2,
+  Lightbulb,
+  Globe,
+  BarChart3,
+  Handshake
 } from 'lucide-react';
 
 // Register GSAP plugins
@@ -37,7 +42,8 @@ if (typeof window !== 'undefined') {
 export default function PitchDeckPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [currentSection, setCurrentSection] = useState(0);
-  const totalSections = 12;
+  const [showAppendix, setShowAppendix] = useState(false);
+  const totalSections = 8; // 8 main slides
 
   // Navigate to specific section
   const navigateToSection = useCallback((index: number) => {
@@ -313,7 +319,7 @@ export default function PitchDeckPage() {
       <div className="fixed top-0 left-0 right-0 h-1 bg-gray-100 z-50">
         <div
           className="h-full bg-gradient-to-r from-verdex-600 to-verdex-500 transition-all duration-300"
-          style={{ width: `${((currentSection + 1) / 12) * 100}%` }}
+          style={{ width: `${((currentSection + 1) / totalSections) * 100}%` }}
         />
       </div>
 
@@ -335,7 +341,7 @@ export default function PitchDeckPage() {
 
         {/* Dots */}
         <div className="flex flex-col gap-2">
-          {Array.from({ length: 12 }).map((_, i) => (
+          {Array.from({ length: 8 }).map((_, i) => (
             <button
               key={i}
               onClick={() => navigateToSection(i)}
@@ -348,7 +354,7 @@ export default function PitchDeckPage() {
               <span className={`absolute left-5 top-1/2 -translate-y-1/2 text-[10px] font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity ${
                 currentSection === i ? 'text-verdex-600' : 'text-gray-500'
               }`}>
-                {['Title', 'Opportunity', 'Gap', 'Solution', 'Process', 'Landscape', 'API', 'Business', 'Traction', 'Market', 'Regulations', 'Ask'][i]}
+                {['Title', 'Challenge', 'Insight', 'Solution', '5 Core', 'Ecosystem', 'Traction', 'Impact'][i]}
               </span>
             </button>
           ))}
@@ -372,6 +378,20 @@ export default function PitchDeckPage() {
         <span className="text-[10px] text-gray-400 font-medium mt-1">
           {currentSection + 1}/{totalSections}
         </span>
+
+        {/* Appendix link */}
+        <button
+          onClick={() => {
+            setShowAppendix(true);
+            setTimeout(() => {
+              const appendix = document.querySelector('.appendix-section');
+              if (appendix) appendix.scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+          }}
+          className="mt-3 px-2 py-1 text-[9px] text-gray-400 hover:text-verdex-600 font-medium tracking-wider uppercase border border-gray-200 hover:border-verdex-300 rounded transition-all"
+        >
+          Appendix
+        </button>
       </nav>
 
       {/* ==================== SECTION 1: HERO ==================== */}
@@ -454,205 +474,127 @@ export default function PitchDeckPage() {
         )}
       </section>
 
-      {/* ==================== SECTION 2: THE OPPORTUNITY ==================== */}
+      {/* ==================== SECTION 2: THE CHALLENGE ==================== */}
       <section className="pinned-section h-screen relative flex items-center overflow-hidden snap-start">
         {/* Layered gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white via-verdex-50/60 to-gold-50/30" />
-        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-verdex-100/20" />
+        <div className="absolute inset-0 bg-gradient-to-br from-navy-900 via-navy-800 to-verdex-900" />
+        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-navy-700/20" />
+        {/* Grid texture */}
+        <svg className="absolute inset-0 w-full h-full opacity-[0.03]" preserveAspectRatio="none">
+          <pattern id="challenge-grid" width="10" height="10" patternUnits="userSpaceOnUse">
+            <path d="M 10 0 L 0 10" stroke="white" strokeWidth="0.5" fill="none" />
+          </pattern>
+          <rect width="100%" height="100%" fill="url(#challenge-grid)" />
+        </svg>
         {/* Radial glow */}
-        <div className="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-verdex-200/20 rounded-full blur-[120px]" />
-        <TopographicLines className="top-0 right-0 w-[400px] h-[400px] translate-x-[20%] -translate-y-[20%] opacity-[0.08]" flip />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-verdex-500/10 rounded-full blur-[150px]" />
 
         <div className="section-content relative z-10 w-full px-6 py-8">
-          <div className="max-w-7xl mx-auto">
+          <div className="max-w-4xl mx-auto">
             {/* Section label */}
-            <div className="animate-item flex items-center gap-3 mb-4">
-              <div className="w-12 h-[2px] bg-gradient-to-r from-gold-500 to-gold-600" />
-              <span className="text-gold-600 font-semibold tracking-wider uppercase text-sm">The Opportunity</span>
+            <div className="animate-item flex items-center gap-3 mb-8">
+              <div className="w-12 h-[2px] bg-gradient-to-r from-verdex-400 to-verdex-500" />
+              <span className="text-verdex-400 font-semibold tracking-wider uppercase text-sm">The Challenge</span>
             </div>
 
-            {/* Bento grid layout */}
-            <div className="grid grid-cols-12 gap-4">
-              {/* Main stat - Large card with Verdex texture */}
-              <div className="bento-card col-span-12 md:col-span-7 row-span-2 relative overflow-hidden rounded-3xl p-8 md:p-12 bg-gradient-to-br from-verdex-500 via-verdex-900 to-verdex-800">
-                {/* Grid texture */}
-                <svg className="absolute inset-0 w-full h-full opacity-[0.08]" preserveAspectRatio="none">
-                  <pattern id="gap-grid" width="10" height="10" patternUnits="userSpaceOnUse">
-                    <path d="M 10 0 L 0 10" stroke="white" strokeWidth="0.5" fill="none" />
-                  </pattern>
-                  <rect width="100%" height="100%" fill="url(#gap-grid)" />
-                </svg>
-                {/* Blurred orbs */}
-                <div className="absolute -top-16 -right-16 w-40 h-40 bg-white/[0.06] rounded-full blur-[80px]" />
-                <div className="absolute -bottom-10 left-1/4 w-32 h-32 bg-emerald-300/[0.08] rounded-full blur-[60px]" />
-                <div className="relative z-10">
-                  <span className="text-white/80 text-lg font-medium">Africa&apos;s Climate Finance Gap</span>
-                  <div className="big-number text-7xl md:text-9xl font-display font-bold text-white mt-2 mb-6" data-value="$233B">
-                    $233B
-                  </div>
-                  <p className="text-xl text-white/70 max-w-md">
-                    Africa holds 60% of the world&apos;s best solar resources but receives only 2% of global climate finance.
-                  </p>
-                  <div className="mt-8 inline-flex items-center gap-2 text-white font-semibold bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
-                    <span>This is a market inefficiency</span>
-                    <ArrowUpRight className="w-5 h-5" strokeWidth={1.5} />
-                  </div>
-                </div>
-              </div>
+            {/* Africa-centric framing */}
+            <div className="bento-card mb-10">
+              <blockquote className="text-2xl md:text-3xl text-white font-light leading-relaxed mb-4">
+                African renewable energy projects face a <span className="text-verdex-400">$233 billion</span> annual financing gap — not from lack of capital, but lack of <span className="text-verdex-400">bankability.</span>
+              </blockquote>
+              <span className="text-white/50 text-sm">LMA Edge Hackathon — Greener Lending Challenge</span>
+            </div>
 
-              {/* Stats cards - Right column */}
-              <div className="bento-card col-span-6 md:col-span-5 glass-card rounded-3xl p-6 flex flex-col justify-between border-l-4 border-l-gold-500">
-                <Sun className="w-8 h-8 text-gold-500" strokeWidth={1.5} />
-                <div>
-                  <div className="text-4xl font-display font-bold text-gray-900">60%</div>
-                  <div className="text-gray-500 text-sm">World&apos;s Best Solar</div>
+            {/* The Gap */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+              <div className="bento-card bg-verdex-500/10 border border-verdex-500/20 rounded-2xl p-5">
+                <div className="flex items-center gap-3 mb-3">
+                  <Check className="w-5 h-5 text-verdex-400" strokeWidth={2} />
+                  <span className="text-verdex-400 font-semibold">LMA Standards Exist</span>
                 </div>
+                <p className="text-white/80">2,009 documents. 12 years of guidance. World-class transition finance frameworks.</p>
               </div>
+              <div className="bento-card bg-rose-500/10 border border-rose-500/20 rounded-2xl p-5">
+                <div className="flex items-center gap-3 mb-3">
+                  <X className="w-5 h-5 text-rose-400" strokeWidth={2} />
+                  <span className="text-rose-400 font-semibold">African Borrowers Excluded</span>
+                </div>
+                <p className="text-white/80">Standards written for London lenders. A developer in Nairobi can&apos;t access them.</p>
+              </div>
+            </div>
 
-              <div className="bento-card col-span-6 md:col-span-5 glass-card rounded-3xl p-6 flex flex-col justify-between border-l-4 border-l-verdex-500">
-                <TrendingUp className="w-8 h-8 text-verdex-600" strokeWidth={1.5} />
-                <div>
-                  <div className="text-4xl font-display font-bold text-gray-900">5x</div>
-                  <div className="text-gray-500 text-sm">Growth by 2030</div>
-                </div>
-              </div>
-
-              {/* Why now - Full width */}
-              <div className="bento-card col-span-12 glass-card rounded-3xl border-l-4 border-l-verdex-500 p-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-2 h-2 bg-verdex-500 rounded-full animate-pulse" />
-                  <span className="text-verdex-700 font-semibold">Why Now</span>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {[
-                    { icon: FileCheck, title: 'LMA Guide', desc: 'October 2025' },
-                    { icon: Shield, title: 'Regulatory Push', desc: 'FCA crackdown' },
-                    { icon: Building2, title: 'DFI Demand', desc: 'Seeking pipeline' },
-                    { icon: Target, title: 'First Mover', desc: 'No competition' },
-                  ].map((item, i) => (
-                    <div key={i} className="animate-item flex items-start gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-verdex-50 border border-verdex-100 flex items-center justify-center flex-shrink-0">
-                        <item.icon className="w-5 h-5 text-verdex-600" strokeWidth={1.5} />
-                      </div>
-                      <div>
-                        <div className="font-semibold text-gray-900">{item.title}</div>
-                        <div className="text-sm text-gray-500">{item.desc}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+            {/* Our Answer */}
+            <div className="bento-card bg-verdex-500/10 backdrop-blur-sm rounded-2xl border border-verdex-500/30 p-6">
+              <p className="text-xl md:text-2xl text-white leading-relaxed">
+                Give African borrowers the tools to understand and demonstrate LMA compliance — <span className="text-verdex-400 font-semibold">before they approach lenders.</span>
+              </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ==================== SECTION 3: THE GAP ==================== */}
+      {/* ==================== SECTION 3: THE INSIGHT ==================== */}
       <section className="pinned-section h-screen relative flex items-center overflow-hidden snap-start">
         {/* Subtle warm gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white via-rose-50/30 to-gray-50" />
-        <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-gradient-to-bl from-rose-100/20 to-transparent" />
-        {/* Subtle glow */}
-        <div className="absolute top-1/2 right-1/4 w-[400px] h-[400px] bg-rose-200/15 rounded-full blur-[100px]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-white via-gray-50 to-verdex-50/30" />
+        <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-gradient-to-bl from-verdex-100/20 to-transparent" />
+        <div className="absolute top-1/2 left-1/4 w-[400px] h-[400px] bg-verdex-200/20 rounded-full blur-[100px]" />
 
         <div className="section-content relative z-10 w-full px-6 py-8">
-          <div className="max-w-7xl mx-auto">
+          <div className="max-w-4xl mx-auto">
             {/* Header */}
-            <div className="animate-item flex items-center gap-3 mb-3">
-              <div className="w-12 h-[2px] bg-gradient-to-r from-rose-500 to-rose-400" />
-              <span className="text-rose-600 font-semibold tracking-wider uppercase text-sm">The Gap</span>
+            <div className="animate-item flex items-center gap-3 mb-4">
+              <div className="w-12 h-[2px] bg-gradient-to-r from-verdex-500 to-verdex-400" />
+              <span className="text-verdex-600 font-semibold tracking-wider uppercase text-sm">The Insight</span>
             </div>
-            <h2 className="animate-item text-4xl md:text-5xl font-display font-medium text-gray-900 mb-6">
-              Viable Projects Exist. <span className="text-rose-500">The Bridge Doesn&apos;t.</span>
+            <h2 className="animate-item text-3xl md:text-4xl font-display font-medium text-gray-900 mb-8">
+              LMA Standards Are Lender-Focused. <span className="text-verdex-600">Borrowers Are Locked Out.</span>
             </h2>
 
-            {/* Bento Grid Layout */}
-            <div className="grid grid-cols-12 gap-4">
-              {/* Projects Card - Large */}
-              <div className="bento-card col-span-12 md:col-span-5 glass-card rounded-3xl border-l-4 border-l-verdex-500 p-6">
-                <div className="flex items-center gap-4 mb-5">
-                  <div className="w-14 h-14 rounded-2xl bg-verdex-100 flex items-center justify-center">
-                    <Leaf className="w-7 h-7 text-verdex-600" strokeWidth={1.5} />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-display font-bold text-gray-900">African Projects</h3>
-                    <p className="text-gray-500">Seeking Capital</p>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-verdex-50">
-                    <Check className="w-5 h-5 text-verdex-600" strokeWidth={1.5} />
-                    <span className="text-verdex-700 font-medium">Viable projects exist</span>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-verdex-50">
-                    <Check className="w-5 h-5 text-verdex-600" strokeWidth={1.5} />
-                    <span className="text-verdex-700 font-medium">Documentation ready</span>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-rose-50">
-                    <span className="text-rose-500 font-bold">✗</span>
-                    <span className="text-rose-600 font-medium">No LMA expertise</span>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-rose-50">
-                    <span className="text-rose-500 font-bold">✗</span>
-                    <span className="text-rose-600 font-medium">High borrowing costs (5-8x)</span>
-                  </div>
-                </div>
-              </div>
+            {/* Human Story - condensed */}
+            <div className="bento-card glass-card rounded-2xl p-5 mb-8 border-l-4 border-l-verdex-500">
+              <p className="text-lg text-gray-700 leading-relaxed">
+                A solar developer in <span className="font-semibold text-verdex-700">Nairobi</span> or wind farm operator in <span className="font-semibold text-verdex-700">Lagos</span> will never navigate 2,009 technical PDFs written for global banks.
+              </p>
+            </div>
 
-              {/* Gap Indicator - Center */}
-              <div className="col-span-12 md:col-span-2 flex flex-col items-center justify-center py-4">
-                <div className="text-6xl font-display font-bold text-rose-300 mb-2">?</div>
-                <div className="w-24 h-1 bg-gradient-to-r from-verdex-400 via-rose-400 to-gold-400 rounded-full mb-2" />
-                <div className="text-rose-500 font-bold text-lg">THE GAP</div>
-                <p className="text-gray-500 text-sm text-center mt-1">No validation layer</p>
-              </div>
-
-              {/* Capital Card - Large */}
-              <div className="bento-card col-span-12 md:col-span-5 glass-card rounded-3xl border-l-4 border-l-gold-500 p-6">
-                <div className="flex items-center gap-4 mb-5">
-                  <div className="w-14 h-14 rounded-2xl bg-gold-100 flex items-center justify-center">
-                    <DollarSign className="w-7 h-7 text-gold-600" strokeWidth={1.5} />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-display font-bold text-gray-900">Global Capital</h3>
-                    <p className="text-gray-500">Ready to Deploy</p>
-                  </div>
+            {/* Simplified two-column - fewer items */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+              <div className="bento-card glass-card rounded-2xl p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <Check className="w-5 h-5 text-verdex-600" strokeWidth={2} />
+                  <span className="font-semibold text-gray-900">Borrowers Have</span>
                 </div>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-verdex-50">
-                    <Check className="w-5 h-5 text-verdex-600" strokeWidth={1.5} />
-                    <span className="text-verdex-700 font-medium">$700B available globally</span>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-verdex-50">
-                    <Check className="w-5 h-5 text-verdex-600" strokeWidth={1.5} />
-                    <span className="text-verdex-700 font-medium">Appetite to deploy</span>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-rose-50">
-                    <span className="text-rose-500 font-bold">✗</span>
-                    <span className="text-rose-600 font-medium">Greenwashing fears</span>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-rose-50">
-                    <span className="text-rose-500 font-bold">✗</span>
-                    <span className="text-rose-600 font-medium">Weeks for due diligence</span>
-                  </div>
-                </div>
+                <p className="text-gray-600">Viable projects, capital needs, and good intentions</p>
               </div>
-
-              {/* Bottom Stats Row */}
-              <div className="col-span-12 grid grid-cols-3 gap-4">
-                {[
-                  { value: '5-8x', label: 'Higher Borrowing Costs', desc: 'vs developed markets', color: 'rose' },
-                  { value: '$17.5M', label: 'FCA Fines 2024', desc: 'Greenwashing penalties', color: 'rose' },
-                  { value: '2-4 wks', label: 'Due Diligence', desc: 'Traditional process', color: 'rose' },
-                ].map((item, i) => (
-                  <div key={i} className={`bento-card glass-card rounded-2xl p-5 text-center border-t-4 border-t-rose-400`}>
-                    <div className="text-3xl font-display font-bold text-rose-500 mb-1">{item.value}</div>
-                    <div className="font-semibold text-gray-900">{item.label}</div>
-                    <div className="text-sm text-gray-500">{item.desc}</div>
-                  </div>
-                ))}
+              <div className="bento-card glass-card rounded-2xl p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <X className="w-5 h-5 text-rose-500" strokeWidth={2} />
+                  <span className="font-semibold text-gray-900">Borrowers Lack</span>
+                </div>
+                <p className="text-gray-600">LMA expertise and bankable documentation</p>
               </div>
             </div>
+
+            {/* Result - single impactful stat */}
+            <div className="bento-card glass-card rounded-2xl p-6 text-center border-t-4 border-t-verdex-500 mb-6">
+              <div className="flex items-center justify-center gap-8">
+                <div>
+                  <div className="text-4xl font-display font-bold text-verdex-600">$233B</div>
+                  <div className="text-sm text-gray-500">Annual climate finance gap</div>
+                </div>
+                <div className="w-px h-12 bg-gray-200" />
+                <div>
+                  <div className="text-4xl font-display font-bold text-verdex-600">5-8x</div>
+                  <div className="text-sm text-gray-500">Higher borrowing costs</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Punchline */}
+            <p className="text-xl text-center font-semibold text-gray-900">
+              What&apos;s missing: <span className="text-verdex-600">a way for borrowers to understand what lenders need.</span>
+            </p>
           </div>
         </div>
       </section>
@@ -670,121 +612,73 @@ export default function PitchDeckPage() {
         <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-verdex-500/25 rounded-full blur-[120px]" />
         <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-teal-500/15 rounded-full blur-[100px]" />
 
-        <div className="section-content relative z-10 w-full px-6 py-6">
-          <div className="max-w-7xl mx-auto">
-            {/* Header - compact */}
-            <div className="text-center mb-5">
-              <div className="intro-header inline-flex items-center gap-2 mb-2 px-3 py-1.5 rounded-full bg-verdex-500/20 border border-verdex-500/30">
-                <Play className="w-3 h-3 text-verdex-300" strokeWidth={1.5} />
-                <span className="text-verdex-300 font-medium text-xs">Introducing</span>
-              </div>
-              <h2 className="intro-header text-4xl md:text-5xl font-display font-bold text-white mb-2">Verdex</h2>
-              <p className="intro-header text-lg text-verdex-300 max-w-xl mx-auto">
-                The compliance infrastructure layer connecting African projects to global capital
+        <div className="section-content relative z-10 w-full px-6 py-8">
+          <div className="max-w-4xl mx-auto">
+            {/* Header - simplified */}
+            <div className="text-center mb-10">
+              <h2 className="intro-header text-4xl md:text-5xl font-display font-bold text-white mb-3">Verdex</h2>
+              <p className="intro-header text-xl text-verdex-300">
+                The Borrower&apos;s Toolkit for LMA Transition Finance
               </p>
             </div>
 
-            {/* Bridge Visualization */}
-            <div className="grid grid-cols-12 gap-4 items-center mb-5">
+            {/* Bridge Visualization - simplified */}
+            <div className="flex items-center justify-center gap-4 md:gap-8 mb-10">
               {/* Projects Side */}
-              <div className="col-span-6 md:col-span-2 intro-side-left">
-                <div className="intro-side-card rounded-2xl bg-white/5 border border-white/10 p-5 text-center hover:bg-white/10 transition-all duration-300">
-                  <Leaf className="w-6 h-6 text-verdex-400 mx-auto mb-3" strokeWidth={1.5} />
-                  <h3 className="text-base font-semibold text-white mb-1">African Projects</h3>
-                  <p className="text-verdex-300 text-sm">Seeking capital</p>
-                </div>
+              <div className="intro-side-left text-center">
+                <Leaf className="w-8 h-8 text-verdex-400 mx-auto mb-2" strokeWidth={1.5} />
+                <div className="text-white font-semibold">African Projects</div>
               </div>
 
               {/* Arrow */}
-              <div className="hidden md:flex col-span-1 justify-center intro-arrow">
-                <ChevronRight className="w-5 h-5 text-verdex-400/60 animate-pulse" />
-              </div>
+              <ChevronRight className="w-6 h-6 text-verdex-400/60" />
 
-              {/* Verdex Center - Hero */}
-              <div className="col-span-12 md:col-span-6 intro-verdex-hero">
-                <div className="relative rounded-2xl overflow-hidden group">
-                  {/* Animated outer glow */}
-                  <div className="intro-glow absolute -inset-1 bg-gradient-to-r from-verdex-500/50 via-emerald-400/30 to-verdex-500/50 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  <div className="absolute -inset-0.5 bg-gradient-to-r from-verdex-500/40 via-emerald-400/20 to-verdex-500/40 rounded-2xl blur-lg" />
-
-                  <div className="relative intro-verdex-card rounded-2xl bg-gradient-to-br from-verdex-900 via-verdex-800 to-verdex-900 border border-verdex-500/30 p-7 hover:border-verdex-400/50 transition-colors duration-300">
-                    <svg className="absolute inset-0 w-full h-full opacity-[0.05]" preserveAspectRatio="none">
-                      <pattern id="verdex-intro-grid" width="10" height="10" patternUnits="userSpaceOnUse">
-                        <path d="M 10 0 L 0 10" stroke="white" strokeWidth="0.5" fill="none" />
-                      </pattern>
-                      <rect width="100%" height="100%" fill="url(#verdex-intro-grid)" />
-                    </svg>
-
-                    <div className="relative flex items-center gap-5">
-                      {/* VERDEX label */}
-                      <div className="text-center flex-shrink-0">
-                        <div className="flex items-center gap-1.5 mb-1">
-                          <div className="intro-pulse-dot w-2 h-2 rounded-full bg-verdex-400" />
-                          <span className="text-verdex-300 text-xs font-medium uppercase tracking-wider">Platform</span>
-                        </div>
-                        <div className="text-3xl font-display font-bold text-white tracking-wide">VERDEX</div>
-                      </div>
-
-                      {/* Divider */}
-                      <div className="w-px h-16 bg-gradient-to-b from-transparent via-verdex-500/50 to-transparent" />
-
-                      {/* Features as 2x2 grid */}
-                      <div className="flex-1 grid grid-cols-2 gap-2">
-                        {[
-                          { action: 'Validate', desc: 'LMA' },
-                          { action: 'Detect', desc: 'Greenwash' },
-                          { action: 'Match', desc: 'DFIs' },
-                          { action: 'Generate', desc: 'KPIs' },
-                        ].map((item, i) => (
-                          <div
-                            key={item.action}
-                            className="intro-feature flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-200"
-                          >
-                            <span className="w-5 h-5 rounded text-xs font-bold bg-verdex-500/30 text-verdex-300 flex items-center justify-center flex-shrink-0">{i + 1}</span>
-                            <div className="leading-tight">
-                              <span className="text-white text-sm font-medium">{item.action}</span>
-                              <span className="text-gray-400 text-xs ml-1">{item.desc}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+              {/* Verdex Center */}
+              <div className="intro-verdex-hero rounded-2xl bg-gradient-to-br from-verdex-800 to-verdex-900 border border-verdex-500/30 px-8 py-6">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <div className="w-2 h-2 rounded-full bg-verdex-400" />
+                  <span className="text-verdex-300 text-xs font-medium uppercase tracking-wider">Platform</span>
+                </div>
+                <div className="text-2xl font-display font-bold text-white mb-3">VERDEX</div>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  {[
+                    { action: 'Validate', desc: 'LMA' },
+                    { action: 'Detect', desc: 'Greenwash' },
+                    { action: 'Match', desc: 'DFIs' },
+                    { action: 'Generate', desc: 'KPIs' },
+                  ].map((item, i) => (
+                    <div key={item.action} className="flex items-center gap-2 text-white/80">
+                      <span className="w-5 h-5 rounded bg-verdex-500/30 text-verdex-300 text-xs flex items-center justify-center">{i + 1}</span>
+                      <span className="text-white">{item.action}</span>
+                      <span className="text-white/50 text-xs">{item.desc}</span>
                     </div>
-                  </div>
+                  ))}
                 </div>
               </div>
 
               {/* Arrow */}
-              <div className="hidden md:flex col-span-1 justify-center intro-arrow">
-                <ChevronRight className="w-5 h-5 text-gold-400/60 animate-pulse" />
-              </div>
+              <ChevronRight className="w-6 h-6 text-gold-400/60" />
 
               {/* Capital Side */}
-              <div className="col-span-6 md:col-span-2 intro-side-right">
-                <div className="intro-side-card rounded-2xl bg-white/5 border border-white/10 p-5 text-center hover:bg-white/10 transition-all duration-300">
-                  <DollarSign className="w-6 h-6 text-gold-400 mx-auto mb-3" strokeWidth={1.5} />
-                  <h3 className="text-base font-semibold text-white mb-1">Global Capital</h3>
-                  <p className="text-gold-300 text-sm">$700B ready</p>
-                </div>
+              <div className="intro-side-right text-center">
+                <DollarSign className="w-8 h-8 text-gold-400 mx-auto mb-2" strokeWidth={1.5} />
+                <div className="text-white font-semibold">Global Capital</div>
+                <div className="text-gold-300 text-sm">$700B ready</div>
               </div>
             </div>
 
-            {/* Features Grid - 5 columns */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            {/* Features - with short descriptions */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { icon: FileCheck, title: 'LMA Validator', desc: '5 Core Components', stat: '<60s' },
-                { icon: Shield, title: 'Greenwash Detection', desc: 'AI-Powered Analysis', stat: '95%' },
-                { icon: Users, title: 'DFI Matching', desc: 'Smart Recommendations', stat: '7+' },
-                { icon: Zap, title: 'KPI Generator', desc: 'Automated Metrics', stat: 'Auto' },
-                { icon: Code, title: 'API Integration', desc: 'Ecosystem Ready', stat: 'REST' },
+                { icon: FileCheck, title: 'LMA Validator', desc: '5 Core Components scoring' },
+                { icon: Database, title: 'Clause Search', desc: '500+ templates with AI' },
+                { icon: Shield, title: 'Greenwash Detection', desc: 'Flag issues early' },
+                { icon: Users, title: 'DFI Matching', desc: '7 development financiers' },
               ].map((feature, i) => (
-                <div
-                  key={i}
-                  className="intro-bottom-card rounded-2xl bg-white/5 border border-white/10 p-5 hover:bg-white/10 transition-colors"
-                >
-                  <feature.icon className="w-6 h-6 text-verdex-400 mb-3" strokeWidth={1.5} />
-                  <div className="font-semibold text-white mb-1">{feature.title}</div>
-                  <div className="text-sm text-gray-400 mb-3">{feature.desc}</div>
-                  <div className="text-lg font-display font-bold text-verdex-400">{feature.stat}</div>
+                <div key={i} className="intro-bottom-card rounded-xl bg-white/5 border border-white/10 p-4 text-center">
+                  <feature.icon className="w-5 h-5 text-verdex-400 mx-auto mb-2" strokeWidth={1.5} />
+                  <div className="text-sm text-white font-medium">{feature.title}</div>
+                  <div className="text-xs text-white/50 mt-1">{feature.desc}</div>
                 </div>
               ))}
             </div>
@@ -792,73 +686,58 @@ export default function PitchDeckPage() {
         </div>
       </section>
 
-      {/* ==================== SECTION 5: HOW IT WORKS ==================== */}
+      {/* ==================== SECTION 5: LMA 5 CORE COMPONENTS ==================== */}
       <section className="pinned-section h-screen relative flex items-center overflow-hidden snap-start">
         {/* Layered gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-white via-verdex-50/30 to-gray-50" />
         <div className="absolute top-0 left-0 w-1/2 h-1/2 bg-gradient-to-br from-verdex-100/30 to-transparent" />
         {/* Glow */}
         <div className="absolute bottom-1/3 left-1/3 w-[400px] h-[400px] bg-verdex-200/15 rounded-full blur-[100px]" />
-        <TopographicLines className="bottom-0 right-0 w-[400px] h-[400px] translate-x-[20%] translate-y-[20%] opacity-[0.08]" flip />
 
         <div className="section-content relative z-10 w-full px-6 py-8">
-          <div className="max-w-7xl mx-auto">
+          <div className="max-w-6xl mx-auto">
             <div className="animate-item flex items-center gap-3 mb-4">
               <div className="w-12 h-[2px] bg-gradient-to-r from-verdex-600 to-verdex-500" />
-              <span className="text-verdex-700 font-semibold tracking-wider uppercase text-sm">Process</span>
+              <span className="text-verdex-700 font-semibold tracking-wider uppercase text-sm">Credibility</span>
             </div>
 
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-              <h2 className="animate-item text-4xl md:text-5xl font-display font-medium text-gray-900">
-                How It <span className="text-verdex-600">Works</span>
-              </h2>
-              <div className="animate-item mt-4 md:mt-0 inline-flex items-center gap-3 px-6 py-3 rounded-full bg-verdex-600 shadow-verdex">
-                <Clock className="w-5 h-5 text-white" strokeWidth={1.5} />
-                <span className="text-white font-semibold">Under 60 Seconds</span>
-              </div>
-            </div>
+            <h2 className="animate-item text-3xl md:text-4xl font-display font-medium text-gray-900 mb-2">
+              Built on the <span className="text-verdex-600">October 2025 LMA Transition Loan Guide</span>
+            </h2>
+            <p className="animate-item text-lg text-gray-600 mb-6">
+              Verdex validates against all 5 Core Components. We didn&apos;t fabricate criteria — we encoded the actual LMA standard.
+            </p>
 
-            {/* Process steps */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+            {/* 5 Components - Simplified */}
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
               {[
-                { step: 1, title: 'Upload', desc: 'Submit project PDF or fill the assessment form', output: 'Structured data', icon: FileCheck },
-                { step: 2, title: 'Validate', desc: 'AI scores against LMA 5 Core Components', output: 'Score 0-100', icon: Shield },
-                { step: 3, title: 'Match', desc: 'Connect with relevant DFIs based on criteria', output: 'Ranked DFIs', icon: Users },
-                { step: 4, title: 'Generate', desc: 'Create KPIs, SPTs, and documentation', output: 'Investor pack', icon: Zap },
+                { num: 1, name: 'Transition Strategy', validation: 'AI analysis' },
+                { num: 2, name: 'Use of Proceeds', validation: 'Eligibility check' },
+                { num: 3, name: 'Project Selection', validation: 'Gap analysis' },
+                { num: 4, name: 'Proceeds Management', validation: 'Doc templates' },
+                { num: 5, name: 'Reporting', validation: 'KPI generator' },
               ].map((item) => (
-                <div key={item.step} className="bento-card glass-card rounded-3xl border-l-4 border-l-verdex-500 p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 rounded-2xl bg-verdex-50 border border-verdex-100 flex items-center justify-center">
-                      <item.icon className="w-5 h-5 text-verdex-600" strokeWidth={1.5} />
-                    </div>
-                    <div className="text-verdex-600 font-mono text-sm font-semibold">0{item.step}</div>
+                <div key={item.num} className="bento-card glass-card rounded-2xl p-4 text-center border-t-4 border-t-verdex-500">
+                  <div className="w-8 h-8 rounded-lg bg-verdex-100 flex items-center justify-center mx-auto mb-2">
+                    <span className="text-verdex-700 font-bold text-sm">{item.num}</span>
                   </div>
-                  <h3 className="text-xl font-display font-semibold text-gray-900 mb-2">{item.title}</h3>
-                  <p className="text-gray-500 text-sm mb-4">{item.desc}</p>
-                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-verdex-50 border border-verdex-200">
-                    <span className="text-verdex-700 text-xs font-medium">{item.output}</span>
-                  </div>
+                  <div className="font-semibold text-gray-900 text-sm mb-2">{item.name}</div>
+                  <div className="text-xs text-verdex-600 font-medium">{item.validation}</div>
                 </div>
               ))}
             </div>
 
-            {/* Comparison */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="bento-card glass-card rounded-3xl border-l-4 border-l-verdex-500 p-8">
-                <h3 className="text-2xl font-display font-semibold text-verdex-700 mb-6">Verdex</h3>
-                <div className="space-y-4 text-lg">
-                  <div className="flex justify-between"><span className="text-gray-500">Time</span><span className="text-verdex-700 font-semibold">&lt;60 seconds</span></div>
-                  <div className="flex justify-between"><span className="text-gray-500">Cost</span><span className="text-verdex-700 font-semibold">$500-2K/mo</span></div>
-                  <div className="flex justify-between"><span className="text-gray-500">Output</span><span className="text-verdex-700 font-semibold">API-ready</span></div>
-                </div>
+            {/* Source Link */}
+            <div className="mt-6 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <FileText className="w-5 h-5 text-verdex-600" strokeWidth={1.5} />
+                <span className="text-sm text-gray-600">
+                  Source: <a href="https://www.lma.eu.com/application/files/9917/6035/1809/Guide_to_Transition_Loans_-_16_October_2025.pdf" target="_blank" rel="noopener noreferrer" className="text-verdex-600 hover:underline font-medium">LMA Transition Loan Guide — October 2025</a>
+                </span>
               </div>
-              <div className="bento-card glass-card rounded-3xl p-5">
-                <h3 className="text-2xl font-display font-semibold text-gray-400 mb-6">Traditional</h3>
-                <div className="space-y-4 text-lg">
-                  <div className="flex justify-between"><span className="text-gray-400">Time</span><span className="text-gray-400">2-4 weeks</span></div>
-                  <div className="flex justify-between"><span className="text-gray-400">Cost</span><span className="text-gray-400">$50K+ consulting</span></div>
-                  <div className="flex justify-between"><span className="text-gray-400">Output</span><span className="text-gray-400">Manual</span></div>
-                </div>
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-verdex-100 border border-verdex-200">
+                <Clock className="w-4 h-4 text-verdex-600" strokeWidth={1.5} />
+                <span className="text-verdex-700 font-semibold text-sm">Assessment in &lt;60 seconds</span>
               </div>
             </div>
           </div>
@@ -899,685 +778,684 @@ export default function PitchDeckPage() {
             </div>
 
             <h2 className="animate-item text-4xl md:text-5xl font-display font-medium text-gray-900 mb-4">
-              Verdex is the <span className="text-verdex-600">Missing Layer</span>
+              Verdex <span className="text-verdex-600">Complements, Not Competes</span>
             </h2>
             <p className="animate-item text-xl text-gray-500 mb-6 max-w-2xl">
-              Not a competitor &mdash; the connector that the ecosystem needs
+              Every tool in the loan market serves lenders. <span className="text-verdex-600 font-semibold">None serve borrowers.</span>
             </p>
 
             {/* Three layer visualization - enhanced layout */}
             <div className="grid grid-cols-12 gap-4 items-stretch">
-              {/* Document Layer */}
+              {/* Lender Side */}
               <div className="col-span-12 md:col-span-3 bento-card glass-card rounded-3xl p-5">
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
-                    <FileText className="w-4 h-4 text-gray-500" strokeWidth={1.5} />
+                  <div className="w-8 h-8 rounded-lg bg-navy-100 flex items-center justify-center">
+                    <Building2 className="w-4 h-4 text-navy-600" strokeWidth={1.5} />
                   </div>
-                  <h3 className="text-base font-semibold text-gray-500">Document Layer</h3>
+                  <h3 className="text-base font-semibold text-navy-600">Lender Side</h3>
                 </div>
                 <div className="space-y-2">
-                  {['LMA.Automate', 'Avvoka', 'Allen & Overy'].map((name) => (
-                    <div key={name} className="px-3 py-2.5 rounded-xl bg-gray-100 text-gray-600 text-sm text-center font-medium">
-                      {name}
+                  {[
+                    { name: 'LMA.Automate', desc: 'Document automation' },
+                    { name: 'Avvoka', desc: 'Contract negotiation' },
+                    { name: 'LendOS', desc: 'Loan administration' },
+                    { name: 'Agensight', desc: 'Syndicated agency' },
+                  ].map((item) => (
+                    <div key={item.name} className="px-3 py-2 rounded-xl bg-navy-50 border border-navy-100">
+                      <div className="text-navy-700 text-sm font-medium">{item.name}</div>
+                      <div className="text-navy-400 text-xs">{item.desc}</div>
                     </div>
                   ))}
                 </div>
-                <div className="mt-4 pt-4 border-t border-gray-100 text-center text-sm text-gray-400 italic">&ldquo;HOW to draft&rdquo;</div>
+                <div className="mt-4 pt-4 border-t border-gray-100 text-center text-sm text-gray-400 italic">&ldquo;How to draft, administer, trade&rdquo;</div>
               </div>
 
-              {/* VERDEX Validation Layer - Center, larger */}
+              {/* LMA Standards - Center */}
               <div className="col-span-12 md:col-span-6 bento-card glass-card rounded-3xl border-2 border-verdex-300 p-6 shadow-verdex relative bg-gradient-to-br from-white via-verdex-50/30 to-white">
                 {/* Connection lines */}
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full w-8 h-[3px] bg-gradient-to-r from-gray-200 to-verdex-400 hidden md:block" />
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-full w-8 h-[3px] bg-gradient-to-l from-gold-300 to-verdex-400 hidden md:block" />
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full w-8 h-[3px] bg-gradient-to-r from-navy-200 to-verdex-400 hidden md:block" />
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-full w-8 h-[3px] bg-gradient-to-l from-verdex-400 to-verdex-400 hidden md:block" />
 
                 {/* Glow effect */}
                 <div className="absolute inset-0 rounded-3xl bg-verdex-200/20 blur-xl -z-10" />
 
-                <div className="flex items-center justify-center gap-2 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-verdex-100 flex items-center justify-center">
-                    <Shield className="w-5 h-5 text-verdex-600" strokeWidth={1.5} />
+                <div className="text-center mb-4">
+                  <div className="text-sm text-gray-500 font-medium uppercase tracking-wider mb-2">One Framework, Both Sides</div>
+                  <div className="inline-block px-6 py-2 rounded-xl bg-gradient-to-r from-verdex-100 to-verdex-50 border border-verdex-200">
+                    <span className="text-xl font-display font-bold text-verdex-700 tracking-wide">LMA STANDARDS</span>
                   </div>
-                  <h3 className="text-lg font-semibold text-verdex-700">Validation Layer</h3>
                 </div>
 
-                <div className="text-center">
-                  <div className="inline-block px-6 py-3 rounded-2xl bg-gradient-to-r from-verdex-600 to-verdex-500 mb-4">
-                    <span className="text-3xl font-display font-bold text-white tracking-wide">VERDEX</span>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 mt-4">
-                    <div className="p-3 rounded-xl bg-verdex-50 border border-verdex-200">
-                      <div className="text-xs text-verdex-500 uppercase tracking-wider mb-1">Question 1</div>
-                      <div className="text-verdex-700 font-medium">&ldquo;IS it compliant?&rdquo;</div>
-                    </div>
-                    <div className="p-3 rounded-xl bg-verdex-50 border border-verdex-200">
-                      <div className="text-xs text-verdex-500 uppercase tracking-wider mb-1">Question 2</div>
-                      <div className="text-verdex-700 font-medium">&ldquo;WHO should fund?&rdquo;</div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 rounded-xl bg-navy-50 border border-navy-100">
+                    <div className="text-xs text-navy-500 uppercase tracking-wider mb-2">Tools for Lenders</div>
+                    <div className="space-y-2 text-sm text-navy-700">
+                      <div>Draft &amp; automate docs</div>
+                      <div>Manage loan portfolios</div>
+                      <div>Process borrower data</div>
                     </div>
                   </div>
+                  <div className="p-4 rounded-xl bg-verdex-50 border border-verdex-200">
+                    <div className="text-xs text-verdex-500 uppercase tracking-wider mb-2">Tools for Borrowers</div>
+                    <div className="space-y-2 text-sm text-verdex-700 font-medium">
+                      <div>Understand LMA requirements</div>
+                      <div>Search clause templates</div>
+                      <div>Assess compliance gaps</div>
+                    </div>
+                  </div>
+                </div>
 
-                  <div className="mt-4 pt-4 border-t border-verdex-100 flex justify-center gap-4 text-xs text-verdex-600">
-                    <span className="flex items-center gap-1"><Check className="w-3 h-3" strokeWidth={1.5} /> Real-time</span>
-                    <span className="flex items-center gap-1"><Check className="w-3 h-3" strokeWidth={1.5} /> AI-powered</span>
-                    <span className="flex items-center gap-1"><Check className="w-3 h-3" strokeWidth={1.5} /> LMA standards</span>
+                <div className="mt-4 pt-4 border-t border-verdex-100 text-center">
+                  <div className="inline-block px-4 py-2 rounded-xl bg-gradient-to-r from-verdex-600 to-verdex-500">
+                    <span className="text-white font-bold">VERDEX = Borrower Side</span>
                   </div>
                 </div>
               </div>
 
-              {/* Capital Layer */}
-              <div className="col-span-12 md:col-span-3 bento-card glass-card rounded-3xl p-5">
+              {/* Borrower Side */}
+              <div className="col-span-12 md:col-span-3 bento-card glass-card rounded-3xl p-5 border-2 border-verdex-200 bg-gradient-to-br from-verdex-50/50 to-white">
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 rounded-lg bg-gold-100 flex items-center justify-center">
-                    <DollarSign className="w-4 h-4 text-gold-600" strokeWidth={1.5} />
+                  <div className="w-8 h-8 rounded-lg bg-verdex-100 flex items-center justify-center">
+                    <Users className="w-4 h-4 text-verdex-600" strokeWidth={1.5} />
                   </div>
-                  <h3 className="text-base font-semibold text-gray-500">Capital Layer</h3>
+                  <h3 className="text-base font-semibold text-verdex-700">Borrower Side</h3>
                 </div>
                 <div className="space-y-2">
-                  {['DFIs (IFC, AfDB)', 'Banks', 'Climate Investors'].map((name) => (
-                    <div key={name} className="px-3 py-2.5 rounded-xl bg-yellow-50 border border-yellow-200 text-yellow-700 text-sm text-center font-medium">
-                      {name}
-                    </div>
-                  ))}
+                  <div className="px-3 py-3 rounded-xl bg-gradient-to-r from-verdex-600 to-verdex-500 text-white text-center">
+                    <div className="font-bold text-lg">VERDEX</div>
+                    <div className="text-verdex-100 text-xs">Pre-deal validation</div>
+                  </div>
                 </div>
-                <div className="mt-4 pt-4 border-t border-gray-100 text-center text-sm text-gray-400 italic">&ldquo;WHAT to fund&rdquo;</div>
+                <div className="mt-4 space-y-2 text-xs text-verdex-600">
+                  <div className="flex items-center gap-2"><Check className="w-3 h-3" strokeWidth={2} /> Self-assess compliance</div>
+                  <div className="flex items-center gap-2"><Check className="w-3 h-3" strokeWidth={2} /> Match with DFIs</div>
+                  <div className="flex items-center gap-2"><Check className="w-3 h-3" strokeWidth={2} /> Generate documentation</div>
+                </div>
+                <div className="mt-4 pt-4 border-t border-verdex-100 text-center text-sm text-verdex-500 italic">&ldquo;Do I qualify? Who funds me?&rdquo;</div>
               </div>
             </div>
 
-            {/* Unique positioning - enhanced checkpoints */}
-            <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                { label: 'Pre-validation layer', desc: 'Compliance before capital', icon: 'layers' },
-                { label: 'LMA 5 Components', desc: 'Full standard coverage', icon: 'file' },
-                { label: 'API to both layers', desc: 'Seamless integration', icon: 'link' },
-                { label: '2,009 docs catalogued', desc: 'Growing knowledge base', icon: 'database' },
-              ].map((item, i) => (
-                <div key={i} className="bento-card glass-card rounded-2xl border-l-4 border-l-verdex-500 p-4 hover:shadow-verdex transition-shadow">
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-verdex-100 flex items-center justify-center flex-shrink-0">
-                      {item.icon === 'layers' && <Layers className="w-4 h-4 text-verdex-600" strokeWidth={1.5} />}
-                      {item.icon === 'file' && <FileText className="w-4 h-4 text-verdex-600" strokeWidth={1.5} />}
-                      {item.icon === 'link' && <Link2 className="w-4 h-4 text-verdex-600" strokeWidth={1.5} />}
-                      {item.icon === 'database' && <Database className="w-4 h-4 text-verdex-600" strokeWidth={1.5} />}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <Check className="w-4 h-4 text-verdex-600 flex-shrink-0" strokeWidth={1.5} />
-                        <span className="text-verdex-700 text-sm font-semibold">{item.label}</span>
-                      </div>
-                      <p className="text-xs text-gray-500">{item.desc}</p>
-                    </div>
+            {/* Lender Benefit + Value to LMA */}
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-navy-50 to-white border border-navy-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-navy-100 flex items-center justify-center flex-shrink-0">
+                    <Clock className="w-4 h-4 text-navy-600" strokeWidth={1.5} />
                   </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ==================== SECTION 7: API INTEGRATION ==================== */}
-      <section className="pinned-section h-screen relative flex items-center overflow-hidden snap-start">
-        {/* Cool gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white via-verdex-50/40 to-navy-50/20" />
-        <div className="absolute top-0 left-1/4 w-[600px] h-[400px] bg-verdex-100/30 rounded-full blur-[100px]" />
-        <TopographicLines className="top-0 left-0 w-[400px] h-[400px] -translate-x-[20%] -translate-y-[20%] opacity-[0.06]" />
-
-        <div className="section-content relative z-10 w-full px-6 py-8">
-          <div className="max-w-7xl mx-auto">
-            <div className="animate-item flex items-center gap-3 mb-4">
-              <div className="w-12 h-[2px] bg-gradient-to-r from-navy-600 to-navy-500" />
-              <span className="text-navy-600 font-semibold tracking-wider uppercase text-sm">Integration</span>
-            </div>
-
-            <h2 className="animate-item text-4xl md:text-5xl font-display font-medium text-gray-900 mb-6">
-              API-First <span className="text-navy-600">Architecture</span>
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-              {/* Left partners */}
-              <div className="space-y-4">
-                {[
-                  { name: 'LMA.Automate', desc: 'Validated data, KPIs', type: 'API licensing' },
-                  { name: 'Avvoka', desc: 'Compliance scores', type: 'API licensing' },
-                ].map((partner, i) => (
-                  <div key={i} className="bento-card glass-card rounded-2xl p-4 hover:shadow-verdex transition-shadow text-center">
-                    <h4 className="font-semibold text-gray-900 mb-2">{partner.name}</h4>
-                    <p className="text-sm text-gray-500 mb-3">{partner.desc}</p>
-                    <span className="text-xs text-navy-600 font-medium">{partner.type}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Center - API hub with aura */}
-              <div className="flex items-center justify-center relative">
-                {/* Outer glow rings */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-[280px] h-[280px] rounded-full bg-navy-400/5 blur-xl" />
-                </div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-[220px] h-[220px] rounded-full bg-verdex-400/8 blur-lg" />
-                </div>
-
-                <div className="relative bento-card rounded-3xl p-6 bg-gradient-to-br from-navy-900 via-navy-800 to-navy-900 border border-navy-700/50 shadow-2xl">
-                  {/* Inner glow */}
-                  <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-verdex-500/10 via-transparent to-navy-500/10" />
-
-                  {/* Header */}
-                  <div className="relative text-center mb-5">
-                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-navy-700/50 border border-navy-600/50 mb-3">
-                      <div className="w-2 h-2 rounded-full bg-verdex-400 animate-pulse" />
-                      <span className="text-xs text-navy-300 font-medium tracking-wider uppercase">Live</span>
-                    </div>
-                    <h3 className="text-2xl font-display font-bold text-white">VERDEX APIs</h3>
-                  </div>
-
-                  {/* Endpoints - centered grid */}
-                  <div className="relative grid grid-cols-2 gap-2">
-                    {[
-                      { endpoint: '/assess', desc: 'Compliance check', icon: Shield },
-                      { endpoint: '/match', desc: 'Funder matching', icon: Target },
-                      { endpoint: '/generate', desc: 'Doc generation', icon: FileCheck },
-                      { endpoint: '/search', desc: 'Knowledge base', icon: Database },
-                    ].map((item) => (
-                      <div key={item.endpoint} className="group flex flex-col items-center text-center px-4 py-3 rounded-xl bg-navy-800/80 border border-navy-700/50 hover:border-verdex-500/50 hover:bg-navy-700/50 transition-all">
-                        <item.icon className="w-5 h-5 text-verdex-400 mb-2" />
-                        <code className="text-verdex-300 font-mono text-sm font-semibold">{item.endpoint}</code>
-                        <span className="text-navy-400 text-xs mt-1">{item.desc}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Bottom accent */}
-                  <div className="mt-4 pt-4 border-t border-navy-700/50 flex justify-center gap-3 text-xs text-navy-400">
-                    <span className="flex items-center gap-1"><Code className="w-3 h-3" strokeWidth={1.5} /> RESTful</span>
-                    <span className="flex items-center gap-1"><Zap className="w-3 h-3" strokeWidth={1.5} /> &lt;100ms</span>
-                    <span className="flex items-center gap-1"><Shield className="w-3 h-3" strokeWidth={1.5} /> OAuth 2.0</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right partners */}
-              <div className="space-y-4">
-                {[
-                  { name: 'DFIs', desc: 'Pre-screened pipeline', type: 'Success fees' },
-                  { name: 'Banks', desc: 'Greenwash verification', type: 'Subscription' },
-                ].map((partner, i) => (
-                  <div key={i} className="bento-card glass-card rounded-2xl p-4 hover:shadow-gold transition-shadow text-center">
-                    <h4 className="font-semibold text-gray-900 mb-2">{partner.name}</h4>
-                    <p className="text-sm text-gray-500 mb-3">{partner.desc}</p>
-                    <span className="text-xs text-gold-600 font-medium">{partner.type}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Roadmap */}
-            <div className="mt-4 bento-card glass-card rounded-3xl p-5">
-              <h3 className="text-xl font-display font-bold text-gray-900 mb-3 text-center">2026 Roadmap</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[
-                  { q: 'Q1', name: 'LMA.Automate', status: 'Pilot' },
-                  { q: 'Q2', name: 'DFI APIs', status: 'IFC, AfDB' },
-                  { q: 'Q3', name: 'Avvoka', status: 'Partnership' },
-                  { q: 'Q4', name: 'Banks', status: 'Integration' },
-                ].map((item, i) => (
-                  <div key={i} className="text-center p-4 rounded-2xl bg-gray-50">
-                    <div className="text-2xl font-display font-bold text-navy-600 mb-2">{item.q}</div>
-                    <div className="font-medium text-gray-900">{item.name}</div>
-                    <div className="text-sm text-gray-500">{item.status}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ==================== SECTION 8: BUSINESS MODEL ==================== */}
-      <section className="pinned-section h-screen relative flex items-center overflow-hidden snap-start">
-        {/* Mesh gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white via-verdex-50/50 to-gold-50/20" />
-        <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-verdex-100/25 rounded-full blur-[120px]" />
-        <div className="absolute bottom-0 left-1/4 w-[400px] h-[400px] bg-gold-100/20 rounded-full blur-[100px]" />
-        <div className="section-content relative z-10 w-full px-6 py-8">
-          <div className="max-w-7xl mx-auto">
-            <div className="animate-item flex items-center gap-3 mb-4">
-              <div className="w-12 h-[2px] bg-gradient-to-r from-verdex-600 to-verdex-500" />
-              <span className="text-verdex-700 font-semibold tracking-wider uppercase text-sm">Business</span>
-            </div>
-
-            <h2 className="animate-item text-4xl md:text-5xl font-display font-medium text-gray-900 mb-6">
-              Four Revenue <span className="text-verdex-600">Streams</span>
-            </h2>
-
-            {/* Bento Grid Layout */}
-            <div className="grid grid-cols-12 gap-3">
-              {/* SaaS - Hero card with texture */}
-              <div className="col-span-12 md:col-span-8 bento-card rounded-2xl p-6 bg-gradient-to-br from-verdex-600 via-verdex-900 to-verdex-700 relative overflow-hidden">
-                {/* Grid texture */}
-                <svg className="absolute inset-0 w-full h-full opacity-[0.08]" preserveAspectRatio="none">
-                  <pattern id="saas-grid" width="10" height="10" patternUnits="userSpaceOnUse">
-                    <path d="M 10 0 L 0 10" stroke="white" strokeWidth="0.5" fill="none" />
-                  </pattern>
-                  <rect width="100%" height="100%" fill="url(#saas-grid)" />
-                </svg>
-                <div className="absolute -top-16 -right-16 w-40 h-40 bg-white/[0.06] rounded-full blur-[80px]" />
-                <div className="absolute -bottom-10 left-1/4 w-32 h-32 bg-emerald-300/[0.08] rounded-full blur-[60px]" />
-
-                <div className="relative flex items-center justify-between">
                   <div>
-                    <span className="text-xs bg-white/10 backdrop-blur-sm text-white/90 px-3 py-1 rounded-full font-semibold">PRIMARY REVENUE</span>
-                    <h3 className="text-xl font-display font-bold text-white mt-3">SaaS Subscription</h3>
-                    <div className="flex items-baseline gap-2 mt-2">
-                      <span className="text-5xl font-display font-bold text-white">$500-10K</span>
-                      <span className="text-white/50">/month</span>
-                    </div>
-                  </div>
-                  {/* Tiers */}
-                  <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
-                    <div className="text-xs text-white/50 mb-2">Tiers</div>
-                    <div className="space-y-1 text-sm">
-                      <div className="text-white/70">Starter: $500/mo</div>
-                      <div className="text-white/70">Pro: $2K/mo</div>
-                      <div className="text-white font-semibold">Enterprise: $10K/mo</div>
-                    </div>
+                    <div className="text-navy-700 font-semibold text-sm">Value to Lenders</div>
+                    <div className="text-gray-600 text-xs">Pre-validated borrowers = faster due diligence</div>
                   </div>
                 </div>
               </div>
-
-              {/* Transaction Fees */}
-              <div className="col-span-6 md:col-span-4 bento-card glass-card rounded-2xl p-4">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-lg bg-navy-100 flex items-center justify-center">
-                    <DollarSign className="w-5 h-5 text-navy-600" strokeWidth={1.5} />
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-verdex-50 to-white border border-verdex-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-verdex-100 flex items-center justify-center flex-shrink-0">
+                    <TrendingUp className="w-4 h-4 text-verdex-600" strokeWidth={1.5} />
                   </div>
-                  <span className="font-medium text-gray-900">Transactions</span>
-                </div>
-                <div className="text-2xl font-display font-bold text-gray-900">5-15 bps</div>
-                <div className="text-xs text-gray-400">/deal</div>
-                <div className="text-xs text-gray-500 mt-2">e.g. $50K on $100M deal</div>
-              </div>
-
-              {/* API */}
-              <div className="col-span-6 md:col-span-4 bento-card glass-card rounded-2xl p-4 border-l-4 border-l-verdex-500">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-lg bg-verdex-100 flex items-center justify-center">
-                    <Code className="w-5 h-5 text-verdex-600" strokeWidth={1.5} />
+                  <div>
+                    <div className="text-verdex-700 font-semibold text-sm">Value to LMA</div>
+                    <div className="text-gray-600 text-xs">More deals use LMA frameworks</div>
                   </div>
-                  <span className="font-medium text-gray-900">API</span>
-                  <span className="text-xs bg-verdex-100 text-verdex-700 px-2 py-0.5 rounded-full">NEW</span>
                 </div>
-                <div className="text-2xl font-display font-bold text-verdex-700">$50K+</div>
-                <div className="text-xs text-gray-400">/year</div>
-              </div>
-
-              {/* Data */}
-              <div className="col-span-6 md:col-span-4 bento-card glass-card rounded-2xl p-4">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-lg bg-navy-100 flex items-center justify-center">
-                    <Database className="w-5 h-5 text-navy-600" strokeWidth={1.5} />
-                  </div>
-                  <span className="font-medium text-gray-900">Data</span>
-                </div>
-                <div className="text-2xl font-display font-bold text-gray-900">$25-100K</div>
-                <div className="text-xs text-gray-400">/year</div>
-              </div>
-
-              {/* Unit Economics */}
-              <div className="col-span-6 md:col-span-4 bento-card glass-card rounded-2xl p-4 flex flex-col items-center justify-center text-center">
-                <div className="text-xs text-gray-400 mb-1">LTV:CAC</div>
-                <div className="text-xl font-display font-bold text-gray-900">15:1 <span className="text-verdex-500">→</span> 188:1</div>
-                <div className="text-xs text-gray-500 mt-2">Y1 to Y5 as platform scales</div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ==================== SECTION 9: TRACTION ==================== */}
+      {/* ==================== SECTION 7: TRACTION ==================== */}
       <section className="pinned-section h-screen relative flex items-center overflow-hidden snap-start">
         {/* Subtle gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-white via-gray-50 to-verdex-50/30" />
-        <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-verdex-50/20 to-transparent" />
-        {/* Glow */}
         <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-verdex-200/15 rounded-full blur-[100px]" />
         <div className="section-content relative z-10 w-full px-6 py-8">
-          <div className="max-w-7xl mx-auto">
+          <div className="max-w-4xl mx-auto">
             <div className="animate-item flex items-center gap-3 mb-4">
               <div className="w-12 h-[2px] bg-gradient-to-r from-verdex-600 to-verdex-500" />
               <span className="text-verdex-700 font-semibold tracking-wider uppercase text-sm">Traction</span>
             </div>
 
-            <h2 className="animate-item text-4xl md:text-5xl font-display font-medium text-gray-900 mb-6">
+            <h2 className="animate-item text-3xl md:text-4xl font-display font-medium text-gray-900 mb-8">
               Foundation is <span className="text-verdex-600">Laid</span>
             </h2>
 
-            {/* Symmetric bento grid layout */}
-            <div className="grid grid-cols-12 gap-4">
-              {/* MVP Live - spans top */}
-              <div className="col-span-12 md:col-span-4 bento-card glass-card rounded-2xl p-5 border-2 border-verdex-200 flex flex-col justify-center">
+            {/* Hero section - simplified */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+              {/* MVP Live */}
+              <div className="bento-card glass-card rounded-2xl p-6 border-2 border-verdex-200">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-3 h-3 bg-verdex-500 rounded-full animate-pulse" />
-                  <span className="text-verdex-600 font-semibold text-lg">MVP Live</span>
+                  <span className="text-verdex-600 font-semibold">MVP Live</span>
                 </div>
-                <span className="text-2xl font-display font-bold text-gray-900">verdx.site</span>
+                <span className="text-3xl font-display font-bold text-gray-900">verdx.site</span>
               </div>
 
-              {/* Hero stat - 2,009 with Verdex texture */}
-              <div className="col-span-12 md:col-span-8 bento-card rounded-3xl p-6 bg-gradient-to-br from-verdex-600 via-verdex-800 to-verdex-900 relative overflow-hidden">
-                {/* Grid texture */}
+              {/* Hero stat - 2,009 */}
+              <div className="bento-card rounded-2xl p-6 bg-gradient-to-br from-verdex-600 to-verdex-800 relative overflow-hidden">
                 <svg className="absolute inset-0 w-full h-full opacity-[0.08]" preserveAspectRatio="none">
                   <pattern id="moat-grid" width="10" height="10" patternUnits="userSpaceOnUse">
                     <path d="M 10 0 L 0 10" stroke="white" strokeWidth="0.5" fill="none" />
                   </pattern>
                   <rect width="100%" height="100%" fill="url(#moat-grid)" />
                 </svg>
-                {/* Blurred orbs */}
-                <div className="absolute -top-16 -right-16 w-40 h-40 bg-white/[0.06] rounded-full blur-[80px]" />
-                <div className="absolute -bottom-10 left-1/4 w-32 h-32 bg-emerald-300/[0.08] rounded-full blur-[60px]" />
-
-                <div className="relative flex items-center justify-between">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <Shield className="w-4 h-4 text-white/80" strokeWidth={1.5} />
-                      <span className="text-white/80 text-sm font-semibold">The Moat</span>
-                    </div>
-                    <div className="text-6xl font-display font-bold text-white">2,009</div>
-                    <div className="text-white/60">Documents Catalogued</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/10">
-                      <div className="text-3xl font-display font-bold text-white">20</div>
-                      <div className="text-white/60 text-sm">Indexed Docs</div>
-                    </div>
-                    <div className="text-white/40 text-xs mt-2">No competitor has this</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Bottom row - 4 equal stats */}
-              <div className="col-span-6 md:col-span-3 bento-card glass-card rounded-2xl p-4 text-center">
-                <div className="text-3xl font-display font-bold text-navy-600">83</div>
-                <div className="text-xs text-gray-400">Africa-Specific</div>
-              </div>
-              <div className="col-span-6 md:col-span-3 bento-card glass-card rounded-2xl p-4 text-center">
-                <div className="text-3xl font-display font-bold text-navy-600">12</div>
-                <div className="text-xs text-gray-400">Years Coverage</div>
-              </div>
-              <div className="col-span-6 md:col-span-3 bento-card glass-card rounded-2xl p-4 text-center">
-                <div className="text-3xl font-display font-bold text-navy-600">500+</div>
-                <div className="text-xs text-gray-400">Clauses</div>
-              </div>
-              <div className="col-span-6 md:col-span-3 bento-card glass-card rounded-2xl p-4 text-center">
-                <div className="text-3xl font-display font-bold text-navy-600">7</div>
-                <div className="text-xs text-gray-400">DFI Partners</div>
-              </div>
-
-              {/* Value Proposition Quote */}
-              <div className="col-span-12 pt-4 mt-2 text-center">
-                <p className="text-gray-600 leading-relaxed max-w-2xl mx-auto">
-                  <span className="text-verdex-600 font-semibold">When borrowers understand the standards, they come prepared.</span>{' '}
-                  Deals close faster. LMA framework adoption grows. The market becomes more efficient.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ==================== SECTION 10: MARKET ==================== */}
-      <section className="pinned-section h-screen relative flex items-center overflow-hidden snap-start">
-        {/* Layered gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white via-navy-50/30 to-verdex-50/20" />
-        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-navy-100/30 rounded-full blur-[120px]" />
-        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-verdex-100/25 rounded-full blur-[100px]" />
-
-        {/* Background texture - concentric circles with glow */}
-        <div className="absolute top-1/2 right-0 translate-x-1/4 -translate-y-1/2 w-[700px] h-[700px]">
-          <div className="absolute inset-0 bg-verdex-200/20 rounded-full blur-[80px]" />
-          <svg className="absolute inset-0 w-full h-full opacity-[0.12]" viewBox="0 0 400 400">
-            <circle cx="200" cy="200" r="50" fill="none" stroke="#22c55e" strokeWidth="1.5" />
-            <circle cx="200" cy="200" r="100" fill="none" stroke="#22c55e" strokeWidth="1.2" />
-            <circle cx="200" cy="200" r="150" fill="none" stroke="#22c55e" strokeWidth="0.8" />
-            <circle cx="200" cy="200" r="200" fill="none" stroke="#22c55e" strokeWidth="0.5" />
-            <circle cx="200" cy="200" r="6" fill="#22c55e" opacity="0.4" />
-          </svg>
-        </div>
-
-        <div className="section-content relative z-10 w-full px-6 py-8">
-          <div className="max-w-7xl mx-auto">
-            {/* Header */}
-            <div className="animate-item flex items-center gap-3 mb-3">
-              <div className="w-12 h-[2px] bg-gradient-to-r from-navy-600 to-navy-500" />
-              <span className="text-navy-600 font-semibold tracking-wider uppercase text-sm">Market</span>
-            </div>
-            <h2 className="animate-item text-4xl md:text-5xl font-display font-medium text-gray-900 mb-5">
-              Market <span className="text-verdex-600">Opportunity</span>
-            </h2>
-
-            {/* Bento Grid Layout */}
-            <div className="grid grid-cols-12 gap-3">
-              {/* TAM */}
-              <div className="col-span-12 md:col-span-4 bento-card glass-card rounded-2xl p-5 border-l-4 border-l-navy-500">
-                <div className="text-xs text-gray-400 mb-1">TAM</div>
-                <div className="text-4xl font-display font-bold text-navy-600 mb-1">$700B</div>
-                <div className="text-sm text-gray-500">Global Transition Finance</div>
-              </div>
-
-              {/* SAM */}
-              <div className="col-span-6 md:col-span-4 bento-card glass-card rounded-2xl p-5 border-l-4 border-l-verdex-500">
-                <div className="text-xs text-gray-400 mb-1">SAM</div>
-                <div className="text-4xl font-display font-bold text-verdex-600 mb-1">$25B</div>
-                <div className="text-sm text-gray-500">Africa by 2030</div>
-              </div>
-
-              {/* SOM */}
-              <div className="col-span-6 md:col-span-4 bento-card glass-card rounded-2xl p-5 border-l-4 border-l-gold-500">
-                <div className="text-xs text-gray-400 mb-1">SOM</div>
-                <div className="text-4xl font-display font-bold text-gold-600 mb-1">$20M</div>
-                <div className="text-sm text-gray-500">ARR Year 5</div>
-              </div>
-
-              {/* Revenue Projection - bar chart */}
-              <div className="col-span-12 md:col-span-7 bento-card glass-card rounded-2xl p-5">
-                <h3 className="text-sm font-semibold text-gray-500 mb-4">Revenue Projection</h3>
-                <div className="flex items-end justify-between gap-3" style={{ height: '120px' }}>
-                  {[
-                    { year: 'Y1', value: '$450K', height: 12 },
-                    { year: 'Y2', value: '$1.5M', height: 18 },
-                    { year: 'Y3', value: '$3M', height: 28 },
-                    { year: 'Y4', value: '$8M', height: 52 },
-                    { year: 'Y5', value: '$20M', height: 120, highlight: true },
-                  ].map((item, i) => (
-                    <div key={i} className="flex-1 flex flex-col items-center justify-end h-full">
-                      <div className="text-xs font-semibold text-gray-600 mb-1">{item.value}</div>
-                      <div
-                        className={`w-full rounded-t-lg ${item.highlight ? 'bg-gradient-to-t from-verdex-600 to-verdex-400' : 'bg-verdex-200'}`}
-                        style={{ height: `${item.height}px` }}
-                      />
-                      <div className={`text-xs mt-2 ${item.highlight ? 'text-verdex-600 font-semibold' : 'text-gray-400'}`}>{item.year}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Priority Markets */}
-              <div className="col-span-12 md:col-span-5 bento-card glass-card rounded-2xl p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-semibold text-gray-700">Priority Markets</h3>
-                  <span className="text-xs text-verdex-600 font-bold bg-verdex-50 px-2 py-1 rounded-full">$77B</span>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { country: 'Nigeria', flag: '🇳🇬', pipeline: '$18B' },
-                    { country: 'S. Africa', flag: '🇿🇦', pipeline: '$15B' },
-                    { country: 'Egypt', flag: '🇪🇬', pipeline: '$14B' },
-                    { country: 'Kenya', flag: '🇰🇪', pipeline: '$12B' },
-                    { country: 'Morocco', flag: '🇲🇦', pipeline: '$8B' },
-                    { country: 'Others', flag: '🌍', pipeline: '$10B' },
-                  ].map((item) => (
-                    <div key={item.country} className="flex items-center justify-between p-2 rounded-lg bg-gray-50">
-                      <div className="flex items-center gap-2">
-                        <span>{item.flag}</span>
-                        <span className="text-sm text-gray-700">{item.country}</span>
-                      </div>
-                      <span className="text-xs text-verdex-600 font-semibold">{item.pipeline}</span>
-                    </div>
-                  ))}
+                <div className="relative">
+                  <div className="text-5xl font-display font-bold text-white">2,009</div>
+                  <div className="text-white/70">LMA Documents Catalogued</div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
 
-      {/* ==================== SECTION 11: REGULATIONS ==================== */}
-      <section className="pinned-section h-screen relative flex items-center overflow-hidden snap-start">
-        {/* Warm gradient with accent */}
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-rose-50/30" />
-        <div className="absolute top-0 right-0 w-2/3 h-1/2 bg-gradient-to-bl from-rose-100/20 to-transparent" />
-        {/* Subtle glow */}
-        <div className="absolute bottom-1/3 left-1/4 w-[400px] h-[400px] bg-verdex-100/15 rounded-full blur-[100px]" />
-        <div className="section-content relative z-10 w-full px-6 py-8">
-          <div className="max-w-7xl mx-auto">
-            <div className="animate-item flex items-center gap-3 mb-4">
-              <div className="w-12 h-[2px] bg-gradient-to-r from-rose-500 to-rose-400" />
-              <span className="text-rose-600 font-semibold tracking-wider uppercase text-sm">Tailwinds</span>
+            {/* Key stats - simplified inline */}
+            <div className="bento-card glass-card rounded-2xl p-6 mb-6">
+              <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10">
+                <div className="text-center">
+                  <div className="text-2xl font-display font-bold text-verdex-600">20</div>
+                  <div className="text-xs text-gray-500">Indexed (MVP)</div>
+                </div>
+                <div className="w-px h-8 bg-gray-200 hidden md:block" />
+                <div className="text-center">
+                  <div className="text-2xl font-display font-bold text-verdex-600">500+</div>
+                  <div className="text-xs text-gray-500">Clause Templates</div>
+                </div>
+                <div className="w-px h-8 bg-gray-200 hidden md:block" />
+                <div className="text-center">
+                  <div className="text-2xl font-display font-bold text-verdex-600">7</div>
+                  <div className="text-xs text-gray-500">DFIs Matched</div>
+                </div>
+              </div>
             </div>
 
-            <h2 className="animate-item text-4xl md:text-5xl font-display font-medium text-gray-900 mb-6">
-              Compliance is <span className="text-rose-500">Mandatory</span>
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
-              {[
-                { date: 'Dec 2024', title: 'FCA Anti-Greenwashing', desc: '$17.5M fines', feature: 'Greenwash Detection', borderColor: 'border-l-rose-500' },
-                { date: 'Oct 2025', title: 'LMA Transition Guide', desc: '5 Core Components', feature: 'LMA Validator', borderColor: 'border-l-verdex-500' },
-                { date: 'Jul 2026', title: 'EU ESG Transparency', desc: 'Disclosure required', feature: 'Compliance Scoring', borderColor: 'border-l-navy-600' },
-              ].map((reg, i) => (
-                <div key={i} className={`bento-card glass-card rounded-3xl ${reg.borderColor} border-l-4 p-5`}>
-                  <div className="text-sm text-gray-500 mb-2">{reg.date}</div>
-                  <h3 className="text-xl font-display font-bold text-gray-900 mb-3">{reg.title}</h3>
-                  <p className="text-gray-500 mb-6">{reg.desc}</p>
-                  <div className="flex items-center gap-2 text-sm text-verdex-700 font-medium">
-                    <Check className="w-4 h-4" strokeWidth={1.5} />
-                    <span>Verdex: {reg.feature}</span>
-                  </div>
-                </div>
+            {/* Tech Stack - for technical judges */}
+            <div className="flex flex-wrap items-center justify-center gap-3 mb-6">
+              {['Next.js', 'Python', 'Groq AI', 'ASI1:mini', 'Pinecone', 'Railway'].map((tech) => (
+                <span key={tech} className="px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-medium">{tech}</span>
               ))}
             </div>
 
-            {/* Impact */}
-            <div className="bento-card glass-card rounded-3xl border-l-4 border-l-verdex-500 p-8">
-              <h3 className="text-xl font-display font-bold text-gray-900 mb-3 text-center">
-                If We Enable <span className="text-verdex-600">10%</span> of the Gap
-              </h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[
-                  { value: '$23B', label: 'Finance Unlocked', sub: 'annually' },
-                  { value: '50+ GW', label: 'Renewable Capacity', sub: 'annually' },
-                  { value: '100M+', label: 'People with Power', sub: 'annually' },
-                  { value: '100M+', label: 'Tonnes CO2e Avoided', sub: 'annually' },
-                ].map((impact, i) => (
-                  <div key={i} className="text-center p-4 rounded-2xl bg-verdex-50">
-                    <div className="text-2xl font-display font-bold text-verdex-700 mb-1">{impact.value}</div>
-                    <div className="text-sm text-gray-500">{impact.label}</div>
-                    <div className="text-xs text-gray-400">{impact.sub}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            {/* Value Proposition */}
+            <p className="text-center text-lg text-gray-600">
+              <span className="text-verdex-600 font-semibold">When borrowers understand the standards, they come prepared.</span>
+            </p>
           </div>
         </div>
       </section>
 
-      {/* ==================== SECTION 12: THE ASK ==================== */}
+      {/* ==================== SECTION 8: IMPACT & CALL TO ACTION ==================== */}
       <section className="pinned-section h-screen relative flex items-center overflow-hidden snap-start">
         {/* Rich layered dark gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-verdex-950 via-verdex-900 to-navy-900" />
-        <div className="absolute inset-0 bg-gradient-to-t from-navy-950/50 via-transparent to-verdex-800/20" />
-
-        {/* Grid pattern */}
         <div className="absolute inset-0 opacity-[0.04]" style={{
           backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
           backgroundSize: '60px 60px'
         }} />
-
-        {/* Enhanced gradient orbs */}
-        <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-verdex-500/25 rounded-full blur-[150px]" />
-        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-teal-500/20 rounded-full blur-[120px]" />
-        <div className="absolute top-1/2 right-1/3 w-[300px] h-[300px] bg-gold-500/10 rounded-full blur-[80px]" />
+        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-verdex-500/20 rounded-full blur-[150px]" />
 
         <div className="section-content relative z-10 w-full px-6 py-8">
-          <div className="max-w-6xl mx-auto">
-            {/* Two column layout */}
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-20 items-center">
+          <div className="max-w-4xl mx-auto">
+            {/* Impact header */}
+            <div className="text-center mb-10">
+              <h2 className="animate-item text-3xl md:text-4xl font-display font-medium text-white mb-2">
+                If We Enable <span className="text-verdex-400">10%</span> of the Financing Gap
+              </h2>
+              <p className="text-white/50 text-sm mb-8">Annually</p>
 
-              {/* Left side - Quote & Metrics */}
-              <div className="md:col-span-7">
-                {/* Quote */}
-                <blockquote className="animate-item text-2xl md:text-3xl lg:text-4xl text-white font-light leading-relaxed tracking-wide mb-8">
-                  &ldquo;Where every project speaks the same language as global lenders &mdash; and every platform gains the validation layer it needs.&rdquo;
-                </blockquote>
-
-                {/* Inline metrics */}
-                <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
-                  <span className="text-gray-300"><span className="text-2xl font-display font-bold text-white">$233B</span> <span className="text-sm">annual gap</span></span>
-                  <span className="text-verdex-500/50">•</span>
-                  <span className="text-gray-300"><span className="text-2xl font-display font-bold text-white">$20M</span> <span className="text-sm">ARR Y5</span></span>
-                  <span className="text-verdex-500/50">•</span>
-                  <span className="text-gray-300"><span className="text-2xl font-display font-bold text-white">2,009</span> <span className="text-sm">docs</span></span>
-                  <span className="text-verdex-500/50">•</span>
-                  <span className="text-gray-300"><span className="text-2xl font-display font-bold text-white">$77B</span> <span className="text-sm">pipeline</span></span>
+              {/* All impact stats in one row */}
+              <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10">
+                <div className="text-center">
+                  <div className="text-4xl md:text-5xl font-display font-bold text-white">$23B</div>
+                  <div className="text-white/50 text-xs">Climate finance</div>
+                </div>
+                <div className="w-px h-10 bg-white/20 hidden md:block" />
+                <div className="text-center">
+                  <div className="text-4xl md:text-5xl font-display font-bold text-white">50+GW</div>
+                  <div className="text-white/50 text-xs">Renewable capacity</div>
+                </div>
+                <div className="w-px h-10 bg-white/20 hidden md:block" />
+                <div className="text-center">
+                  <div className="text-4xl md:text-5xl font-display font-bold text-white">100M+</div>
+                  <div className="text-white/50 text-xs">People powered</div>
+                </div>
+                <div className="w-px h-10 bg-white/20 hidden md:block" />
+                <div className="text-center">
+                  <div className="text-4xl md:text-5xl font-display font-bold text-white">100M+</div>
+                  <div className="text-white/50 text-xs">Tonnes CO2 avoided</div>
                 </div>
               </div>
+            </div>
 
-              {/* Right side - The Ask */}
-              <div className="md:col-span-5">
-                <div className="bg-white/[0.03] backdrop-blur-sm rounded-3xl border border-white/10 p-6">
-                  <h2 className="text-xl font-display font-medium text-white mb-5 flex items-center gap-3">
-                    <span className="w-8 h-px bg-verdex-500" />
-                    The Ask
-                  </h2>
+            {/* Quote */}
+            <blockquote className="text-2xl md:text-3xl text-white font-light leading-relaxed text-center mb-10">
+              &ldquo;Where African projects learn to speak the language of global lenders.&rdquo;
+            </blockquote>
 
-                  <div className="space-y-4 mb-6">
-                    <div className="flex items-center justify-between">
-                      <span className="text-white font-medium">Investment</span>
-                      <span className="text-verdex-400 text-sm">Seed Round</span>
-                    </div>
-                    <div className="h-px bg-white/10" />
-                    <div className="flex items-center justify-between">
-                      <span className="text-white font-medium">Partnership</span>
-                      <span className="text-verdex-400 text-sm">LMA.Automate, DFIs</span>
-                    </div>
-                    <div className="h-px bg-white/10" />
-                    <div className="flex items-center justify-between">
-                      <span className="text-white font-medium">Pilot</span>
-                      <span className="text-verdex-400 text-sm">Bank Program</span>
-                    </div>
-                  </div>
-
-                  {/* CTA */}
-                  <a
-                    href="https://verdx.site"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-verdex-600 text-white font-medium hover:bg-verdex-500 transition-colors"
-                  >
-                    verdx.site
-                    <ArrowUpRight className="w-4 h-4" strokeWidth={1.5} />
-                  </a>
+            {/* Call to action - simplified */}
+            <div className="bg-white/[0.03] backdrop-blur-sm rounded-2xl border border-white/10 p-6 max-w-xl mx-auto">
+              <h3 className="text-white font-semibold mb-4 text-center">We&apos;re Looking For</h3>
+              <div className="space-y-2 mb-5 text-sm">
+                <div className="flex justify-between text-white/80">
+                  <span>Pilot Partnership</span>
+                  <span className="text-verdex-400">LMA members</span>
                 </div>
+                <div className="flex justify-between text-white/80">
+                  <span>Integration</span>
+                  <span className="text-verdex-400">LMA.Automate / Avvoka</span>
+                </div>
+                <div className="flex justify-between text-white/80">
+                  <span>Ecosystem Partners</span>
+                  <span className="text-verdex-400">Debtdomain / LendOS</span>
+                </div>
+                <div className="flex justify-between text-white/80">
+                  <span>DFI Collaboration</span>
+                  <span className="text-verdex-400">Pipeline integration</span>
+                </div>
+              </div>
+              <a href="https://verdx.site" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-verdex-600 text-white font-medium hover:bg-verdex-500 transition-colors">
+                Demo: verdx.site <ArrowUpRight className="w-4 h-4" strokeWidth={1.5} />
+              </a>
+            </div>
 
-                {/* Footer */}
-                <div className="mt-4 text-center">
-                  <p className="text-gray-400 text-sm">Verdex Pitch Deck &mdash; 2026</p>
+            {/* Footer */}
+            <p className="text-center text-gray-400 text-sm mt-6">
+              Verdex &mdash; LMA Edge Hackathon 2026 &mdash; Greener Lending
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ==================== APPENDIX (conditionally rendered) ==================== */}
+      {showAppendix && (
+        <>
+      {/* ==================== APPENDIX DIVIDER ==================== */}
+      <section className="appendix-section pinned-section h-screen relative flex items-center justify-center overflow-hidden snap-start bg-gray-900">
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900" />
+        <div className="absolute inset-0 opacity-5" style={{
+          backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
+          backgroundSize: '40px 40px'
+        }} />
+        <div className="section-content relative z-10 text-center px-6">
+          <div className="inline-block px-6 py-2 rounded-full bg-white/10 border border-white/20 mb-6">
+            <span className="text-white/60 text-sm font-medium tracking-wider uppercase">Available on Request</span>
+          </div>
+          <h2 className="text-5xl md:text-6xl font-display font-bold text-white mb-8">Appendix</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
+            {[
+              { id: 'A1', title: 'DFI Eligibility Matrix', desc: 'Full requirements for 7 DFIs' },
+              { id: 'A2', title: 'Technical Architecture', desc: 'API endpoints & integration' },
+              { id: 'A3', title: 'Financial Projections', desc: 'Detailed revenue model' },
+              { id: 'A4', title: 'Document Coverage', desc: '2,009 LMA docs analysis' },
+              { id: 'A5', title: 'Market Analysis', desc: 'TAM/SAM/SOM breakdown' },
+            ].map((item) => (
+              <div key={item.id} className="p-4 rounded-xl bg-white/5 border border-white/10 text-left">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="text-verdex-400 font-mono text-sm font-bold">{item.id}</span>
+                  <span className="text-white font-medium">{item.title}</span>
+                </div>
+                <p className="text-white/50 text-sm">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+          <button
+            onClick={() => {
+              setShowAppendix(false);
+              setTimeout(() => {
+                const firstSection = document.querySelector('.pinned-section');
+                if (firstSection) firstSection.scrollIntoView({ behavior: 'smooth' });
+              }, 100);
+            }}
+            className="mt-8 inline-flex items-center gap-2 px-4 py-2 text-sm text-white/60 hover:text-white font-medium border border-white/20 hover:border-white/40 rounded-lg transition-all"
+          >
+            <ChevronUp className="w-4 h-4" strokeWidth={1.5} />
+            Back to Presentation
+          </button>
+        </div>
+      </section>
+
+      {/* ==================== APPENDIX A1: DFI ELIGIBILITY MATRIX ==================== */}
+      <section className="pinned-section h-screen relative flex items-center overflow-hidden snap-start">
+        <div className="absolute inset-0 bg-gradient-to-br from-white via-verdex-50/30 to-white" />
+        <div className="section-content relative z-10 w-full px-6 py-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-verdex-600 font-mono text-sm font-bold bg-verdex-100 px-2 py-1 rounded">A1</span>
+              <span className="text-gray-400 font-medium">Appendix</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-display font-medium text-gray-900 mb-6">
+              DFI <span className="text-verdex-600">Eligibility Matrix</span>
+            </h2>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">DFI</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Min. Deal Size</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Sectors</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Geography</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Key Requirements</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { name: 'IFC', min: '$10M', sectors: 'All renewable, clean tech', geo: 'Global emerging', req: 'E&S standards, additionality' },
+                    { name: 'AfDB', min: '$5M', sectors: 'Energy, infrastructure', geo: 'Africa only', req: 'Regional impact, job creation' },
+                    { name: 'FMO', min: '€5M', sectors: 'Energy, agri, finance', geo: 'Emerging markets', req: 'SDG alignment, gender lens' },
+                    { name: 'DEG', min: '€5M', sectors: 'Renewable, manufacturing', geo: 'Developing countries', req: 'German interest, dev impact' },
+                    { name: 'BII', min: '£5M', sectors: 'Clean energy, infra', geo: 'Africa, S. Asia', req: 'Climate focus, job creation' },
+                    { name: 'Proparco', min: '€3M', sectors: 'Energy, finance, health', geo: 'Africa, emerging', req: 'French link, SDG impact' },
+                    { name: 'DFC', min: '$10M', sectors: 'Energy, infra, health', geo: 'Low/middle income', req: 'US interest, dev impact' },
+                  ].map((dfi) => (
+                    <tr key={dfi.name} className="border-b border-gray-100 hover:bg-verdex-50/50">
+                      <td className="py-3 px-4 font-semibold text-verdex-700">{dfi.name}</td>
+                      <td className="py-3 px-4 text-gray-600">{dfi.min}</td>
+                      <td className="py-3 px-4 text-gray-600">{dfi.sectors}</td>
+                      <td className="py-3 px-4 text-gray-600">{dfi.geo}</td>
+                      <td className="py-3 px-4 text-gray-500 text-xs">{dfi.req}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ==================== APPENDIX A2: TECHNICAL ARCHITECTURE ==================== */}
+      <section className="pinned-section h-screen relative flex items-center overflow-hidden snap-start">
+        <div className="absolute inset-0 bg-gradient-to-br from-white via-navy-50/20 to-white" />
+        <TopographicLines className="top-0 left-0 w-[400px] h-[400px] -translate-x-[20%] -translate-y-[20%] opacity-[0.06]" />
+        <div className="section-content relative z-10 w-full px-6 py-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-navy-600 font-mono text-sm font-bold bg-navy-100 px-2 py-1 rounded">A2</span>
+              <span className="text-gray-400 font-medium">Appendix</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-display font-medium text-gray-900 mb-6">
+              Technical <span className="text-navy-600">Architecture</span>
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* API Endpoints */}
+              <div className="md:col-span-2 rounded-2xl p-6 bg-gradient-to-br from-slate-900 to-slate-800 relative overflow-hidden">
+                <svg className="absolute inset-0 w-full h-full opacity-[0.04]" preserveAspectRatio="none">
+                  <pattern id="a2-grid" width="12" height="12" patternUnits="userSpaceOnUse">
+                    <path d="M 12 0 L 0 12" stroke="white" strokeWidth="0.5" fill="none" />
+                  </pattern>
+                  <rect width="100%" height="100%" fill="url(#a2-grid)" />
+                </svg>
+                <h3 className="relative text-lg font-semibold text-white mb-4">API Endpoints</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { endpoint: '/api/assess', desc: 'LMA compliance scoring', method: 'POST' },
+                    { endpoint: '/api/search', desc: 'Clause semantic search', method: 'GET' },
+                    { endpoint: '/api/chat', desc: 'AI knowledge assistant', method: 'POST' },
+                    { endpoint: '/api/generate-draft', desc: 'Document generation', method: 'POST' },
+                    { endpoint: '/api/clause-insight', desc: 'Clause analysis', method: 'POST' },
+                    { endpoint: '/api/upload-pdf', desc: 'PDF processing', method: 'POST' },
+                  ].map((api) => (
+                    <div key={api.endpoint} className="p-3 rounded-xl bg-slate-800 border border-slate-700">
+                      <code className="text-emerald-400 text-sm font-mono">{api.endpoint}</code>
+                      <p className="text-slate-300 text-xs mt-1">{api.desc}</p>
+                      <span className="text-slate-400 text-xs">{api.method}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* Tech Stack */}
+              <div className="glass-card rounded-2xl p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Tech Stack</h3>
+                <div className="space-y-3">
+                  {[
+                    { layer: 'Frontend', tech: 'Next.js 16, React 19, TypeScript' },
+                    { layer: 'AI/LLM', tech: 'Groq (Llama 4 Maverick)' },
+                    { layer: 'Vector DB', tech: 'Pinecone' },
+                    { layer: 'Retrieval', tech: 'RAG pipeline' },
+                    { layer: 'Styling', tech: 'Tailwind CSS, GSAP' },
+                    { layer: 'Deploy', tech: 'Vercel Edge' },
+                  ].map((item) => (
+                    <div key={item.layer} className="flex justify-between items-center py-2 border-b border-gray-100">
+                      <span className="text-gray-500 text-sm">{item.layer}</span>
+                      <span className="text-gray-900 text-sm font-medium">{item.tech}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
           </div>
         </div>
       </section>
+
+      {/* ==================== APPENDIX A3: FINANCIAL PROJECTIONS ==================== */}
+      <section className="pinned-section h-screen relative flex items-center overflow-hidden snap-start">
+        <div className="absolute inset-0 bg-gradient-to-br from-white via-verdex-50/50 to-gold-50/20" />
+        <div className="section-content relative z-10 w-full px-6 py-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-verdex-600 font-mono text-sm font-bold bg-verdex-100 px-2 py-1 rounded">A3</span>
+              <span className="text-gray-400 font-medium">Appendix</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-display font-medium text-gray-900 mb-6">
+              Financial <span className="text-verdex-600">Projections</span>
+            </h2>
+            <div className="grid grid-cols-12 gap-4">
+              {/* Revenue Streams */}
+              <div className="col-span-12 md:col-span-8 rounded-2xl p-6 bg-gradient-to-br from-emerald-600 to-emerald-800 relative overflow-hidden">
+                <svg className="absolute inset-0 w-full h-full opacity-[0.06]" preserveAspectRatio="none">
+                  <pattern id="a3-grid" width="14" height="14" patternUnits="userSpaceOnUse">
+                    <path d="M 14 0 L 0 14" stroke="white" strokeWidth="0.5" fill="none" />
+                  </pattern>
+                  <rect width="100%" height="100%" fill="url(#a3-grid)" />
+                </svg>
+                <h3 className="relative text-lg font-semibold text-white mb-4">Revenue Streams</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[
+                    { stream: 'SaaS', range: '$500-10K/mo', pct: '60%' },
+                    { stream: 'Transaction', range: '5-15 bps', pct: '20%' },
+                    { stream: 'API Licensing', range: '$50K+/yr', pct: '15%' },
+                    { stream: 'Data', range: '$25-100K/yr', pct: '5%' },
+                  ].map((item) => (
+                    <div key={item.stream} className="p-4 rounded-xl bg-white/20 border border-white/10">
+                      <div className="text-white font-semibold">{item.stream}</div>
+                      <div className="text-emerald-100 text-sm">{item.range}</div>
+                      <div className="text-white/60 text-xs mt-1">{item.pct} of revenue</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* Unit Economics */}
+              <div className="col-span-12 md:col-span-4 glass-card rounded-2xl p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Unit Economics</h3>
+                <div className="space-y-4">
+                  <div className="flex justify-between"><span className="text-gray-500">CAC</span><span className="font-semibold">$2,000 → $800</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">LTV</span><span className="font-semibold">$30K → $150K</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">LTV:CAC</span><span className="font-semibold text-verdex-600">15:1 → 188:1</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Gross Margin</span><span className="font-semibold">85%</span></div>
+                </div>
+              </div>
+              {/* 5-Year Projection */}
+              <div className="col-span-12 glass-card rounded-2xl p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">5-Year Revenue Projection</h3>
+                <div className="flex items-end justify-between gap-4" style={{ height: '150px' }}>
+                  {[
+                    { year: 'Y1', value: '$450K', height: 15 },
+                    { year: 'Y2', value: '$1.5M', height: 30 },
+                    { year: 'Y3', value: '$3M', height: 45 },
+                    { year: 'Y4', value: '$8M', height: 80 },
+                    { year: 'Y5', value: '$20M', height: 150, highlight: true },
+                  ].map((item) => (
+                    <div key={item.year} className="flex-1 flex flex-col items-center justify-end h-full">
+                      <div className="text-sm font-semibold text-gray-600 mb-2">{item.value}</div>
+                      <div className={`w-full rounded-t-lg ${item.highlight ? 'bg-gradient-to-t from-verdex-600 to-verdex-400' : 'bg-verdex-200'}`} style={{ height: `${item.height}px` }} />
+                      <div className={`text-sm mt-2 ${item.highlight ? 'text-verdex-600 font-semibold' : 'text-gray-400'}`}>{item.year}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ==================== APPENDIX A4: DOCUMENT COVERAGE ==================== */}
+      <section className="pinned-section h-screen relative flex items-center overflow-hidden snap-start">
+        <div className="absolute inset-0 bg-gradient-to-br from-white via-gray-50 to-verdex-50/30" />
+        <div className="section-content relative z-10 w-full px-6 py-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-verdex-600 font-mono text-sm font-bold bg-verdex-100 px-2 py-1 rounded">A4</span>
+              <span className="text-gray-400 font-medium">Appendix</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-display font-medium text-gray-900 mb-6">
+              Document <span className="text-verdex-600">Coverage Analysis</span>
+            </h2>
+            <div className="grid grid-cols-12 gap-4">
+              {/* Main Stats */}
+              <div className="col-span-12 md:col-span-4 rounded-2xl p-6 bg-gradient-to-br from-emerald-600 to-emerald-800 relative overflow-hidden">
+                <svg className="absolute inset-0 w-full h-full opacity-[0.05]" preserveAspectRatio="none">
+                  <pattern id="a4-grid" width="10" height="10" patternUnits="userSpaceOnUse">
+                    <path d="M 10 0 L 0 10" stroke="white" strokeWidth="0.5" fill="none" />
+                  </pattern>
+                  <rect width="100%" height="100%" fill="url(#a4-grid)" />
+                </svg>
+                <div className="relative text-6xl font-display font-bold text-white mb-2">2,009</div>
+                <div className="text-emerald-100">Total LMA Documents Catalogued</div>
+                <div className="mt-4 pt-4 border-t border-white/20">
+                  <div className="text-3xl font-display font-bold text-white">20</div>
+                  <div className="text-emerald-100 text-sm">Indexed in Phase 1 (MVP)</div>
+                </div>
+              </div>
+              {/* Categories */}
+              <div className="col-span-12 md:col-span-8 glass-card rounded-2xl p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Document Categories</h3>
+                <div className="space-y-3">
+                  {[
+                    { category: 'LMA Total Library', catalogued: 2009, indexed: '—', pct: 100 },
+                    { category: 'Sustainability & Green', catalogued: 161, indexed: 13, pct: 8 },
+                    { category: 'Africa-Specific', catalogued: 83, indexed: 3, pct: 4 },
+                    { category: 'Transition Finance', catalogued: 42, indexed: 2, pct: 5 },
+                    { category: 'External Frameworks', catalogued: 2, indexed: 2, pct: 100 },
+                  ].map((item) => (
+                    <div key={item.category} className="flex items-center gap-4">
+                      <div className="w-48 text-sm text-gray-700">{item.category}</div>
+                      <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-verdex-500 rounded-full" style={{ width: `${item.pct}%` }} />
+                      </div>
+                      <div className="w-20 text-right text-sm text-gray-600">{item.catalogued}</div>
+                      <div className="w-16 text-right text-sm text-verdex-600 font-semibold">{item.indexed}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex justify-end gap-8 mt-4 text-xs text-gray-400">
+                  <span>Catalogued</span>
+                  <span>Indexed</span>
+                </div>
+              </div>
+              {/* Sources */}
+              <div className="col-span-12 glass-card rounded-2xl p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Key Sources</h3>
+                <div className="flex flex-wrap gap-2">
+                  {['LMA Website', 'Green Loan Principles', 'Transition Loan Guide Oct 2025', 'SBTi Net-Zero V2', 'OHADA Guidelines', 'ZARONIA Framework', 'Paris Agreement', 'Regional Conference Reports'].map((source) => (
+                    <span key={source} className="px-3 py-1 rounded-full bg-verdex-50 text-verdex-700 text-sm">{source}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ==================== APPENDIX A5: MARKET ANALYSIS ==================== */}
+      <section className="pinned-section h-screen relative flex items-center overflow-hidden snap-start">
+        <div className="absolute inset-0 bg-gradient-to-br from-white via-navy-50/30 to-verdex-50/20" />
+        <div className="section-content relative z-10 w-full px-6 py-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-navy-600 font-mono text-sm font-bold bg-navy-100 px-2 py-1 rounded">A5</span>
+              <span className="text-gray-400 font-medium">Appendix</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-display font-medium text-gray-900 mb-6">
+              Market <span className="text-navy-600">Analysis</span>
+            </h2>
+            <div className="grid grid-cols-12 gap-4">
+              {/* TAM/SAM/SOM */}
+              <div className="col-span-12 md:col-span-4 rounded-2xl p-5 border-l-4 border-l-slate-500 bg-gradient-to-br from-slate-700 to-slate-800 relative overflow-hidden">
+                <svg className="absolute inset-0 w-full h-full opacity-[0.04]" preserveAspectRatio="none">
+                  <pattern id="a5-tam-grid" width="8" height="8" patternUnits="userSpaceOnUse">
+                    <path d="M 8 0 L 0 8" stroke="white" strokeWidth="0.5" fill="none" />
+                  </pattern>
+                  <rect width="100%" height="100%" fill="url(#a5-tam-grid)" />
+                </svg>
+                <div className="relative text-xs text-slate-400 mb-1">TAM</div>
+                <div className="relative text-4xl font-display font-bold text-white mb-1">$700B</div>
+                <div className="relative text-sm text-slate-300">Global Transition Finance</div>
+              </div>
+              <div className="col-span-6 md:col-span-4 rounded-2xl p-5 border-l-4 border-l-emerald-500 bg-gradient-to-br from-emerald-600 to-emerald-700 relative overflow-hidden">
+                <svg className="absolute inset-0 w-full h-full opacity-[0.05]" preserveAspectRatio="none">
+                  <pattern id="a5-sam-grid" width="8" height="8" patternUnits="userSpaceOnUse">
+                    <path d="M 8 0 L 0 8" stroke="white" strokeWidth="0.5" fill="none" />
+                  </pattern>
+                  <rect width="100%" height="100%" fill="url(#a5-sam-grid)" />
+                </svg>
+                <div className="relative text-xs text-emerald-200 mb-1">SAM</div>
+                <div className="relative text-4xl font-display font-bold text-white mb-1">$25B</div>
+                <div className="relative text-sm text-emerald-100">Africa by 2030</div>
+              </div>
+              <div className="col-span-6 md:col-span-4 rounded-2xl p-5 border-l-4 border-l-amber-500 bg-gradient-to-br from-amber-500 to-amber-600 relative overflow-hidden">
+                <svg className="absolute inset-0 w-full h-full opacity-[0.05]" preserveAspectRatio="none">
+                  <pattern id="a5-som-grid" width="8" height="8" patternUnits="userSpaceOnUse">
+                    <path d="M 8 0 L 0 8" stroke="white" strokeWidth="0.5" fill="none" />
+                  </pattern>
+                  <rect width="100%" height="100%" fill="url(#a5-som-grid)" />
+                </svg>
+                <div className="relative text-xs text-amber-100 mb-1">SOM</div>
+                <div className="relative text-4xl font-display font-bold text-white mb-1">$20M</div>
+                <div className="relative text-sm text-amber-50">ARR Year 5</div>
+              </div>
+              {/* Priority Markets */}
+              <div className="col-span-12 md:col-span-6 glass-card rounded-2xl p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Priority Markets</h3>
+                  <span className="text-verdex-600 font-bold bg-verdex-50 px-3 py-1 rounded-full">$77B Pipeline</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { country: 'Nigeria', pipeline: '$18B' },
+                    { country: 'South Africa', pipeline: '$15B' },
+                    { country: 'Egypt', pipeline: '$14B' },
+                    { country: 'Kenya', pipeline: '$12B' },
+                    { country: 'Morocco', pipeline: '$8B' },
+                    { country: 'Others', pipeline: '$10B' },
+                  ].map((item) => (
+                    <div key={item.country} className="flex items-center justify-between p-3 rounded-xl bg-gray-50">
+                      <span className="text-gray-700">{item.country}</span>
+                      <span className="text-verdex-600 font-semibold">{item.pipeline}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* Market Drivers */}
+              <div className="col-span-12 md:col-span-6 glass-card rounded-2xl p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Market Drivers</h3>
+                <div className="space-y-3">
+                  {[
+                    '$233B annual climate finance gap in Africa',
+                    '5-8x higher borrowing costs vs developed markets',
+                    'Growing DFI mandates for climate deployment',
+                    'FCA anti-greenwashing rules (Dec 2024)',
+                    'EU ESG transparency requirements (Jul 2026)',
+                    'LMA Transition Loan Guide (Oct 2025)',
+                  ].map((driver) => (
+                    <div key={driver} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50">
+                      <div className="w-2 h-2 rounded-full bg-verdex-500 flex-shrink-0" />
+                      <span className="text-gray-700 text-sm">{driver}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+        </>
+      )}
     </div>
   );
 }
