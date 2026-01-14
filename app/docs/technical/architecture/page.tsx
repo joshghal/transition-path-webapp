@@ -1,4 +1,4 @@
-import DocPage, { InfoBox, DataTable, CodeBlock } from '@/components/docs/DocPage';
+import DocPage, { InfoBox, CodeBlock } from '@/components/docs/DocPage';
 
 export const metadata = {
   title: 'Technical Architecture | Verdex Docs',
@@ -100,21 +100,15 @@ export default function ArchitecturePage() {
       </div>
 
       <h2 id="knowledge-base" className="text-2xl font-display font-semibold text-gray-900 mt-12 mb-4">
-        Knowledge Base Sources
+        Knowledge Base
       </h2>
 
-      <DataTable
-        headers={['Source', 'Documents', 'Use Case']}
-        rows={[
-          [<span key="1" className="font-semibold text-verdex-700">LMA Core Documents</span>, '16', 'Facility agreements, guides, templates (indexed via Pinecone)'],
-          ['LMA Transition Loan Guide', '1', '5 Core Components validation'],
-          ['LMA Green/SLL Principles', '4', 'Sustainability-linked loan compliance'],
-          ['SBTi Net-Zero Standard V2', '1', 'Science-based target validation'],
-          ['Paris Agreement', '1', 'Article 2, 4, 6, 9, 13 alignment'],
-          ['Country NDCs', '7', 'National target alignment'],
-          ['Sector Pathways', '5', 'Decarbonization trajectory validation'],
-        ]}
-      />
+      <p className="text-gray-700 leading-relaxed mb-6">
+        20 indexed documents across LMA core documentation (15), Africa-specific resources (3), and external standards (2) including SBTi Net-Zero and Paris Agreement articles. Full specifications in{' '}
+        <a href="/docs/technical/knowledge-base" className="text-verdex-600 hover:text-verdex-700 underline">
+          Knowledge Base documentation
+        </a>.
+      </p>
 
       <h2 id="tech-stack" className="text-2xl font-display font-semibold text-gray-900 mt-12 mb-4">
         Tech Stack
